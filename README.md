@@ -10,6 +10,7 @@
 ### Trello (private) : https://trello.com/b/xBQusI2R/unreal-adventure-rpg
 ---
 ## 8월(August)
+- ![](/Resources/Images/August/August.png)
 - 0808(Sun) Create and Setting Project
 
 ---
