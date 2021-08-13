@@ -6,7 +6,7 @@
 #include "EngineMinimal.h" // 더 많은 기능을 위해 (0811)
 
 
-#pragma region SungHoon
+#pragma region SungHoon area
 // LOG macro by SungHoon
 DECLARE_LOG_CATEGORY_EXTERN(LOG_SH, Log, All);
 

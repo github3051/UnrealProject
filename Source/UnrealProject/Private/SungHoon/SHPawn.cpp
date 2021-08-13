@@ -25,10 +25,21 @@ void ASHPawn::Tick(float DeltaTime)
 
 }
 
+void ASHPawn::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	SH_LOG_S(Warning);
+}
+
+void ASHPawn::PossessedBy(AController* NewController)
+{
+	SH_LOG_S(Warning);
+	Super::PossessedBy(NewController);
+}
+
 // Called to bind functionality to input
 void ASHPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
-

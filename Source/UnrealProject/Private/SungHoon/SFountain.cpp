@@ -50,7 +50,7 @@ ASFountain::ASFountain()
 	// test log
 	LOG_TEST();
 
-	RotateSpeed = 30.0f;
+	RotateSpeed = 60.0f;
 	Movement->RotationRate = FRotator(0.0f, RotateSpeed, 0.0f);
 }
 
@@ -59,11 +59,11 @@ void ASFountain::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LOG_SH, Warning, TEXT("%s BeginPlay"), *GetName());
+	//UE_LOG(LOG_SH, Warning, TEXT("%s"), *GetName());
 
-	SH_LOG_S(Error);
-	SH_LOG_S(Warning);
-	SH_LOG(Warning, TEXT("%s BeginPlay2"), *GetName());
+	//SH_LOG_S(Error);
+	//SH_LOG_S(Warning);
+	SH_LOG(Warning, TEXT("%s"), *GetName());
 }
 
 void ASFountain::EndPlay(const EEndPlayReason::Type EndPlayReason)
