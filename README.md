@@ -13,7 +13,7 @@
 ![](/Resources/Images/August/August.png)
 
 - ### 08.08(Sun) : Create and Setting Project
-- ### 08.09(Mon) : 
+- ### 08.15(Sun) :
 
 ---
 ## 9월(Semtember)
