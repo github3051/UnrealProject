@@ -2,8 +2,11 @@
 
 #pragma once
 
+#include "../../UnrealProject.h"
+
 #include "EngineMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/RotatingMovementComponent.h"
 #include "FountainJG.generated.h"
 
 UCLASS()
@@ -18,6 +21,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void PostInitializeComponents() override;
 
 public:	
 	// Called every frame
@@ -37,4 +42,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category=IDvalue)
 	int32 ID;
+
+	UPROPERTY(VisibleAnywhere)
+	URotatingMovementComponent* Movement;
+
+
+private:
+	UPROPERTY(EditAnywhere, Category=Stat, Meta = (AllowPrivateAccess = true))
+	float RotateSpeed;
 };

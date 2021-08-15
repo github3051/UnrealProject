@@ -20,3 +20,14 @@ DECLARE_LOG_CATEGORY_EXTERN(LOG_SH, Log, All);
 #define SH_LOG(Verbosity, Format, ...) UE_LOG(LOG_SH, Verbosity, TEXT("%s, %s"), *SHLOG_CALLINFO, *FString::Printf(Format, ##__VA_ARGS__))
 
 #pragma endregion
+
+
+
+#pragma region JongGyun area
+
+DECLARE_LOG_CATEGORY_EXTERN(LOG_JG, Log, All);
+#define JGLOG_CALLINFO (FString(__FUNCTION__) + TEXT("(")+ FString::FromInt(__LINE__) + TEXT(")"))
+#define JGLOG_S(Verbosity) UE_LOG(LOG_JG, Verbosity, TEXT("%s"), *JGLOG_CALLINFO)
+#define JGLOG(Verbosity, Format, ...) UE_LOG(LOG_JG, Verbosity, TEXT("%s, %s"), *JGLOG_CALLINFO, *FString::Printf(Format, ##__VA_ARGS__))
+
+#pragma endregion
