@@ -15,3 +15,11 @@ void AJGPlayerController::OnPossess(APawn * aPawn)
 	JGLOG_S(Warning);
 	Super::OnPossess(aPawn);
 }
+
+void AJGPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
+}
