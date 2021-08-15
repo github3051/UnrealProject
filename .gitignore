@@ -1,9 +1,11 @@
 ## by SH
 !/Saved/
 /Saved/*
-!Saved/Config/
+!/Saved/Config/
 /Saved/Config/*
 !/Saved/Config/Windows/
+/Saved/Config/Windows/*
+!/Saved/Config/Windows/EditorPerProjectUserSettings.ini
 
 ## by JG
 /Intermediate
