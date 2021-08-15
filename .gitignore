@@ -1,6 +1,10 @@
-## by JG (initial)
+## by SH
+!/Saved/
+/Saved/*
+!/Saved/Config/Windows/
+
+## by JG
 /Intermediate
-/Saved
 /.vs
 /Binaries
 /DerivedDataCache
@@ -8,3 +12,4 @@
 /Plugins
 *.sln
 *_BuiltData.uasset
+

@@ -14,3 +14,11 @@ void ASHPlayerController::OnPossess(APawn * aPawn)
 	SH_LOG_S(Warning);
 	Super::OnPossess(aPawn);
 }
+
+void ASHPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
+}
