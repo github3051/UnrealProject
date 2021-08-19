@@ -4,11 +4,13 @@
 #include "SungHoon/SHGameModeBase.h"
 #include "SungHoon/SHPawn.h" // added SHpawn.h
 #include "SungHoon/SHPlayerController.h" // SHPlayerController.h
+#include "SungHoon/SH_Character.h" // SH_Character.h
 
 ASHGameModeBase::ASHGameModeBase()
 {
-	// pawn 클래스 정보를 게임모드 폰 클래스 변수에 저장.
-	DefaultPawnClass = ASHPawn::StaticClass();
+	// DefaultPawnClass 등록, pawn 클래스 정보를 게임모드 폰 클래스 변수에 저장.
+	// DefaultPawnClass = ASHPawn::StaticClass();
+	DefaultPawnClass = ASH_Character::StaticClass();
 
 	// BP로 만든 폰을 넘기려면 아래처럼 한다.
 	/*

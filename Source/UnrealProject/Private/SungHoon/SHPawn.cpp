@@ -31,7 +31,8 @@ ASHPawn::ASHPawn()
 	SpringArm->SetRelativeRotation(FRotator(-15.0f, 0.0f, 0.0f));
 
 	// 스켈레탈 메시 애셋 찾아오기
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_CARDBOARD(TEXT("/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Cardboard.SK_CharM_Cardboard"));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_CARDBOARD(TEXT(
+		"/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Cardboard.SK_CharM_Cardboard"));
 
 	// 메시 애셋을 찾아왔으면
 	if (SK_CARDBOARD.Succeeded())
@@ -44,7 +45,8 @@ ASHPawn::ASHPawn()
 	Mesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 	
 	// 애님인스턴스 파일을 찾아옴.
-	static ConstructorHelpers::FClassFinder<UAnimInstance> SH_WARRIOR_ANIM(TEXT("/Game/SungHoon/Animation/SH_WarriorAnimBlueprint.SH_WarriorAnimBlueprint_C"));
+	static ConstructorHelpers::FClassFinder<UAnimInstance> SH_WARRIOR_ANIM(TEXT(
+		"/Game/SungHoon/Animation/SH_WarriorAnimBlueprint.SH_WarriorAnimBlueprint_C"));
 
 	// 애님 인스턴스를 잘 가져왔다면
 	if (SH_WARRIOR_ANIM.Succeeded())
