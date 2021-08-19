@@ -27,10 +27,10 @@ protected:
 	};
 
 	// View 작동방식 설정함수. GTA vs DIABLO
-	void SetControlMode(const EControlMode& ControlMode);
+	void SetControlMode(const EControlMode& ContrNewControlModeolMode);
 
 	// 초기 컨트롤 모드값 설정
-	EControlMode CurrentControlMode = EControlMode::GTA;
+	EControlMode CurrentControlMode = EControlMode::DIABLO;
 	// 움직이는 방향쪽 방향벡터
 	FVector DirectionToMove = FVector::ZeroVector;
 

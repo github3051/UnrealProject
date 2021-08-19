@@ -59,12 +59,15 @@ void ASH_Character::BeginPlay()
 
 }
 
-void ASH_Character::SetControlMode(const EControlMode& ControlMode)
+void ASH_Character::SetControlMode(const EControlMode& NewControlMode)
 {
-	switch (ControlMode)
+	CurrentControlMode = NewControlMode;
+
+
+	switch (CurrentControlMode)
 	{
 	case EControlMode::GTA:
-
+		SH_LOG_S(Error);
 		ArmLengthTo = 600.0f; // distance
 		//SpringArm->SetRelativeRotation(FRotator::ZeroRotator); // 정면
 		SpringArm->bUsePawnControlRotation = true;
@@ -121,7 +124,7 @@ void ASH_Character::Tick(float DeltaTime)
 		break;
 
 	case EControlMode::DIABLO:
-		SpringArm->SetRelativeLocation = FMath::RInterpTo(SpringArm->RelativeLocation, ArmRotationTo, DeltaTime, ArmRotationSpeed));
+		SpringArm->AddRelativeRotation(FMath::RInterpTo(SpringArm->GetComponentRotation(), ArmRotationTo, DeltaTime, ArmRotationSpeed));
 
 		if (DirectionToMove.SizeSquared() > 0.0f)
 		{
@@ -228,7 +231,7 @@ void ASH_Character::Turn(const float NewAxisValue)
 
 void ASH_Character::ViewChange()
 {
-
+	SH_LOG_S(Error);
 	switch (CurrentControlMode)
 	{
 		// 현재 모드가 GTA라면
@@ -239,7 +242,7 @@ void ASH_Character::ViewChange()
 
 		// 현재 모드가 DIABLO라면
 	case EControlMode::DIABLO:
-		GetController()->SetControlRotation(SpringArm->RelativeLocation);
+		GetController()->SetControlRotation(SpringArm->GetComponentRotation());
 		SetControlMode(EControlMode::GTA);;
 		break;
 
