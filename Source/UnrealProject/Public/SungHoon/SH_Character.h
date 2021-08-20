@@ -7,6 +7,14 @@
 #include "GameFramework/Character.h"
 #include "SH_Character.generated.h"
 
+
+UENUM()
+enum class EControlMode
+{
+	GTA,
+	DIABLO
+};
+
 UCLASS()
 class UNREALPROJECT_API ASH_Character : public ACharacter
 {
@@ -20,17 +28,12 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	enum class EControlMode
-	{
-		GTA,
-		DIABLO
-	};
-
 	// View 작동방식 설정함수. GTA vs DIABLO
-	void SetControlMode(const EControlMode& ContrNewControlModeolMode);
+	void SetControlMode(const EControlMode& NewControlMode);
 
 	// 초기 컨트롤 모드값 설정
-	EControlMode CurrentControlMode = EControlMode::DIABLO;
+	UPROPERTY(VisibleAnywhere, Category = DEBUGING)
+	EControlMode CurrentControlMode = EControlMode::GTA;
 	// 움직이는 방향쪽 방향벡터
 	FVector DirectionToMove = FVector::ZeroVector;
 
@@ -47,7 +50,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-
+	// 캐릭터 클래스에서도 SpringArm, Camera component는 직접 만들어줘야한다.
 	UPROPERTY(VisibleAnywhere, Category = CAMERA)
 	USpringArmComponent* SpringArm;
 	UPROPERTY(VisibleAnywhere, Category = CAMERA)
