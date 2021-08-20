@@ -50,8 +50,8 @@ ASH_Character::ASH_Character()
 	// Set default 컨트롤 모드 설정. DIABLO 방식
 	SetControlMode(EControlMode::GTA);
 
-	//ArmLengthSpeed = 3.0f;
-	//ArmRotationSpeed = 10.0f; // 회전 속도
+	ArmLengthSpeed = 3.0f;
+	ArmRotationSpeed = 10.0f; // 회전 속도
 }
 
 // Called when the game starts or when spawned
@@ -69,11 +69,11 @@ void ASH_Character::SetControlMode(const EControlMode& NewControlMode)
 	switch (CurrentControlMode)
 	{
 	case EControlMode::GTA:
-		SH_LOG(Error,TEXT("GTA Mode"));
+		SH_LOG(Error, TEXT("GTA Mode"));
 
-		//ArmLengthTo = 600.0f; // distance
-		SpringArm->TargetArmLength = 500.0f;
-		SpringArm->SetRelativeRotation(FRotator::ZeroRotator); // 정면
+		//SpringArm->TargetArmLength = 1000.0f;
+		//SpringArm->SetRelativeRotation(FRotator::ZeroRotator); // 일자 정면을 보도록.
+		ArmLengthTo = 600.0f; // distance
 		SpringArm->bUsePawnControlRotation = true; // 컨트롤 회전값과 동일하다.
 		SpringArm->bInheritPitch = true;
 		SpringArm->bInheritYaw = true;
@@ -84,33 +84,43 @@ void ASH_Character::SetControlMode(const EControlMode& NewControlMode)
 
 		// Pawn 설정의 빙글빙글 회전 막음. (기존 방식 막음. default였음)
 		bUseControllerRotationYaw = false;
-		//GetCharacterMovement()->bUseControllerDesiredRotation = false;
 
 		// CharacterMovement에 있는 기능을 이용하자.
 		// 카메라가 움직이는 방향으로 메시를 움직이게 하는 기능임. true 설정. (원래 false임)
 		GetCharacterMovement()->bOrientRotationToMovement = true;
+
+		// 45도씩 끊겨서 회전하는것을 해결하기 위해, 부드럽게 회전하는 기능. GTA는 끊기지 않으므로 내버려둠.
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
 		GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f); // 회전속도 조절
 		break;
 
 	case EControlMode::DIABLO:
 		SH_LOG(Error, TEXT("DIABLO Mode"));
 
-		ArmLengthTo = 800.0f; // distance
-		ArmRotationTo = FRotator(-45.0f, 0.0f, 0.0f);
-		// SpringArm->SetRelativeRotation(FRotator(-45.0f,0.0f,0.0f)); // 정면
+		//SpringArm->TargetArmLength = 800.0f;
+		//SpringArm->SetRelativeRotation(FRotator(-45.0f,0.0f,0.0f)); // 아래로 꺾음.
+		ArmLengthTo = 900.0f; // distance
+		ArmRotationTo = FRotator(-45.0f, 0.0f, 0.0f); // 카메라 각도
 		SpringArm->bUsePawnControlRotation = false;
 		SpringArm->bInheritPitch = false;
 		SpringArm->bInheritYaw = false;
 		SpringArm->bInheritRoll = false;
 
-		// 카메라와 벽의 충돌을 체크해줌. 벽이 있으면 알아서 줌인됨★
+		// 카메라와 벽의 충돌을 체크해줌. 벽이 있으면 알아서 줌인되는걸 끔.
 		SpringArm->bDoCollisionTest = false;
 
 		// Pawn 설정의 빙글빙글 회전 막음. (기존 방식 막음)
+		// 대신 밑에서 bUseControllerDesiredRotation를 켜서 해결함.
 		bUseControllerRotationYaw = false;
+
+		// CharacterMovement에 있는 기능을 이용하자.
+		// 카메라가 움직이는 방향으로 메시를 움직이게 하는 기능임. false. 고정된 시점이므로.
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+
+		// 45도씩 끊겨서 회전하는것을 해결하기 위해, 부드럽게 회전하는 기능. 켜주자.
 		GetCharacterMovement()->bUseControllerDesiredRotation = true; // 부드러운 회전을 위해
 
-		GetCharacterMovement()->bOrientRotationToMovement = false;
+		// 캐릭터 메시의 회전속도 지정
 		GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
 		break;
 
@@ -123,7 +133,10 @@ void ASH_Character::SetControlMode(const EControlMode& NewControlMode)
 void ASH_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	//SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, ArmLengthTo, DeltaTime, ArmLengthSpeed);
+
+	// 매 프레임마다 카메라 손잡이 거리 계산
+	// InterpTo(현재 값, 최종 목표값, 시간, 보간속도)
+	SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, ArmLengthTo, DeltaTime, ArmLengthSpeed);
 
 	switch (CurrentControlMode)
 	{
@@ -131,11 +144,20 @@ void ASH_Character::Tick(float DeltaTime)
 		break;
 
 	case EControlMode::DIABLO:
-		SpringArm->AddRelativeRotation(FMath::RInterpTo(SpringArm->GetComponentRotation(), ArmRotationTo, DeltaTime, ArmRotationSpeed));
+		/*
+			DIABLO 방식은 입력값을 받고 바로 움직이고 회전하는게 아니라,
+			해당하는 회전과 움직임값을 모두 처리한 뒤에, 최종적으로 Tick에서
+			결과값을 이용해서 이동하고 회전하도록 만듦. 그래서 실제 움직임이
+			Tick함수에 있다. GTA는 아님. GTA는 입력함수에 있음.
+		*/
+
+		SpringArm->SetRelativeRotation(FMath::RInterpTo(SpringArm->GetRelativeRotation(), ArmRotationTo, DeltaTime, ArmRotationSpeed));
 
 		if (DirectionToMove.SizeSquared() > 0.0f)
 		{
+			// rotation
 			GetController()->SetControlRotation(FRotationMatrix::MakeFromX(DirectionToMove).Rotator());
+			// move
 			AddMovementInput(DirectionToMove);
 		}
 		break;
@@ -159,7 +181,7 @@ void ASH_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &ASH_Character::LookUp);
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &ASH_Character::Turn);
 
-	// for button
+	// for changing view button
 	PlayerInputComponent->BindAction(TEXT("SH_ViewChange"), EInputEvent::IE_Pressed, this, &ASH_Character::ViewChange);
 }
 
@@ -175,8 +197,8 @@ void ASH_Character::UpDown(const float NewAxisValue)
 		//AddMovementInput(GetActorForwardVector(), NewAxisValue); // 메시가 바라보는 방향 기준으로 움직임.
 
 		// 현재 컨트롤러의 회전값을 가져와서 단위벡터로 방향을 구해옴. 그 방향으로 이동함.
-		AddMovementInput(FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::X), NewAxisValue);
-		//AddMovementInput(FRotationMatrix(FRotator(0.0f, GetControlRotation().Yaw, 0.0f)).GetUnitAxis(EAxis::X), NewAxisValue);
+		//AddMovementInput(FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::X), NewAxisValue);
+		AddMovementInput(FRotationMatrix(FRotator(0.0f, GetControlRotation().Yaw, 0.0f)).GetUnitAxis(EAxis::X), NewAxisValue);
 		break;
 
 	case EControlMode::DIABLO:
@@ -200,8 +222,8 @@ void ASH_Character::LeftRight(const float NewAxisValue)
 		//AddMovementInput(GetActorRightVector(), NewAxisValue); // 메시의 오른쪽 방향을 기준으로 움직임.
 
 		// 현재 컨트롤러의 회전값을 가져와서 단위벡터로 방향을 구해옴. 그 방향으로 이동함.
-		AddMovementInput(FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::Y), NewAxisValue);
-		//AddMovementInput(FRotationMatrix(FRotator(0.0f, GetControlRotation().Yaw, 0.0f)).GetUnitAxis(EAxis::Y), NewAxisValue);
+		//AddMovementInput(FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::Y), NewAxisValue);
+		AddMovementInput(FRotationMatrix(FRotator(0.0f, GetControlRotation().Yaw, 0.0f)).GetUnitAxis(EAxis::Y), NewAxisValue);
 		break;
 
 	case EControlMode::DIABLO:
@@ -262,6 +284,10 @@ void ASH_Character::ViewChange()
 		// 현재 모드가 GTA라면
 	case EControlMode::GTA:
 		// for DIABLO
+		/*
+			아래 컨트롤러의 회전값을 수정해주는 이유가 뭘까?
+		*/
+		// Controller의 rotation값을 현재 액터의 Rotation값으로 설정.
 		GetController()->SetControlRotation(GetActorRotation());
 		SetControlMode(EControlMode::DIABLO);;
 		break;
@@ -269,7 +295,15 @@ void ASH_Character::ViewChange()
 		// 현재 모드가 DIABLO라면
 	case EControlMode::DIABLO:
 		// for GTA
-		GetController()->SetControlRotation(SpringArm->GetComponentRotation());
+		/*
+			DIABLO는 SpringArm을 기준으로 회전하기 때문.
+			이걸 다시 컨트롤러의 회전값으로 수정해줄 필요가 있음.
+			이걸 안해주면 GTA로 변환할때 항상 Default 카메라 설정으로,
+			정면샷만 나옴.
+			즉, 카메라의 높이 수준을 그대로 가져온다면, 좀더 자연스러워지는거지.
+		*/
+		// 현재 SpringArm의 회전값을 ControlRotation 값으로 설정.
+		GetController()->SetControlRotation(SpringArm->GetRelativeRotation());
 		SetControlMode(EControlMode::GTA);;
 		break;
 

@@ -33,14 +33,24 @@ protected:
 
 	// 초기 컨트롤 모드값 설정
 	UPROPERTY(VisibleAnywhere, Category = DEBUGING)
-	EControlMode CurrentControlMode = EControlMode::GTA;
+	EControlMode CurrentControlMode;
+	
 	// 움직이는 방향쪽 방향벡터
-	FVector DirectionToMove = FVector::ZeroVector;
+	UPROPERTY(VisibleAnywhere, Category = DEBUGING)
+	FVector DirectionToMove;
 
-	// SpringArm values
+	// for SpringArm's InterpTo values. 화면전환에 쓰일 변수
+	// 카메라까지 거리
+	UPROPERTY(VisibleAnywhere, Category = DEBUGING)
 	float ArmLengthTo = 0.0f;
+	// 카메라의 각도
+	UPROPERTY(VisibleAnywhere, Category = DEBUGING)
 	FRotator ArmRotationTo = FRotator::ZeroRotator;
+	// 길이 조절 속도
+	UPROPERTY(VisibleAnywhere, Category = DEBUGING)
 	float ArmLengthSpeed = 0.0f;
+	// 카메라 손잡이가 회전하는 속도
+	UPROPERTY(VisibleAnywhere, Category = DEBUGING)
 	float ArmRotationSpeed = 0.0f;
 
 public:	
