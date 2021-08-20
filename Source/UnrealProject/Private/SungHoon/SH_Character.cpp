@@ -52,6 +52,9 @@ ASH_Character::ASH_Character()
 
 	ArmLengthSpeed = 3.0f;
 	ArmRotationSpeed = 10.0f; // 회전 속도
+
+	// for jump speed
+	GetCharacterMovement()->JumpZVelocity = 450.0f;
 }
 
 // Called when the game starts or when spawned
@@ -110,7 +113,7 @@ void ASH_Character::SetControlMode(const EControlMode& NewControlMode)
 		SpringArm->bDoCollisionTest = false;
 
 		// Pawn 설정의 빙글빙글 회전 막음. (기존 방식 막음)
-		// 대신 밑에서 bUseControllerDesiredRotation를 켜서 해결함.
+		// 대신 밑에서 bUseControllerDesiredRotation를 켜서 해결함. 둘다 켜져있으면 안된데!
 		bUseControllerRotationYaw = false;
 
 		// CharacterMovement에 있는 기능을 이용하자.
@@ -120,7 +123,7 @@ void ASH_Character::SetControlMode(const EControlMode& NewControlMode)
 		// 45도씩 끊겨서 회전하는것을 해결하기 위해, 부드럽게 회전하는 기능. 켜주자.
 		GetCharacterMovement()->bUseControllerDesiredRotation = true; // 부드러운 회전을 위해
 
-		// 캐릭터 메시의 회전속도 지정
+		// 캐릭터 메시의 회전속도 지정 bUseControllerDesiredRotation의 전환 속도를 의미.
 		GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
 		break;
 
@@ -136,7 +139,7 @@ void ASH_Character::Tick(float DeltaTime)
 
 	// 매 프레임마다 카메라 손잡이 거리 계산
 	// InterpTo(현재 값, 최종 목표값, 시간, 보간속도)
-	SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, ArmLengthTo, DeltaTime, ArmLengthSpeed);
+	 SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, ArmLengthTo, DeltaTime, ArmLengthSpeed);
 
 	switch (CurrentControlMode)
 	{
@@ -155,9 +158,9 @@ void ASH_Character::Tick(float DeltaTime)
 
 		if (DirectionToMove.SizeSquared() > 0.0f)
 		{
-			// rotation
+			// rotation (메시가 돌아감) 
 			GetController()->SetControlRotation(FRotationMatrix::MakeFromX(DirectionToMove).Rotator());
-			// move
+			// move (실제 이동)
 			AddMovementInput(DirectionToMove);
 		}
 		break;
@@ -183,6 +186,9 @@ void ASH_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	// for changing view button
 	PlayerInputComponent->BindAction(TEXT("SH_ViewChange"), EInputEvent::IE_Pressed, this, &ASH_Character::ViewChange);
+
+	// for jump
+	PlayerInputComponent->BindAction(TEXT("Jump"),EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 }
 
 // for forward, back move
