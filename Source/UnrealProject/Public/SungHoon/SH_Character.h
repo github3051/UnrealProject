@@ -60,6 +60,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void PostInitializeComponents() override;
+
 	// 캐릭터 클래스에서도 SpringArm, Camera component는 직접 만들어줘야한다.
 	UPROPERTY(VisibleAnywhere, Category = CAMERA)
 	USpringArmComponent* SpringArm;
@@ -77,5 +79,39 @@ private:
 
 	// for View control mode
 	void ViewChange();
+	// for attack animation montage
+	void Attack();
 
+	// for delegate for OnAttackMontage (몽타주가 끝나면 수행)
+	UFUNCTION()
+	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	// for AttackComboState
+	void AttackStartComboState();
+	void AttackEndComboState();
+
+private:
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool IsAttacking;
+
+	////////////
+
+	// for Attack Combo
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool CanNextCombo;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool IsComboInputOn;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	int32 CurrentCombo;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	int32 MaxCombo;
+
+	////////////
+
+	// 전방선언. 애님 인스턴스를 너무 자주 사용해서 아예 변수로 만듦.
+	UPROPERTY()
+	class USH_AnimInstance* SHAnim;
 };

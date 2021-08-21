@@ -18,6 +18,8 @@ DECLARE_LOG_CATEGORY_EXTERN(LOG_SH, Log, All);
 #define SH_LOG_S(Verbosity) UE_LOG(LOG_SH, Verbosity, TEXT("%s"), *SHLOG_CALLINFO)
 // printf 문법을 추가한 기능. UE_LOG와 완전히 동일함. 
 #define SH_LOG(Verbosity, Format, ...) UE_LOG(LOG_SH, Verbosity, TEXT("%s, %s"), *SHLOG_CALLINFO, *FString::Printf(Format, ##__VA_ARGS__))
+// 해당하는 조건식 Expr이 거짓이면 아래 매크로 함수 내부를 실행함.
+#define SH_CHECK(Expr, ...) {if(!(Expr)){SH_LOG(Error,TEXT("ASSERTION : %s"),TEXT("'"#Expr"'")); return __VA_ARGS__;}}
 
 #pragma endregion
 

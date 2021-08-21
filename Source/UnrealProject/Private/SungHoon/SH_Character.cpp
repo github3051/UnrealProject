@@ -2,6 +2,7 @@
 
 
 #include "SungHoon/SH_Character.h"
+#include "SungHoon/SH_AnimInstance.h" // Added SH_AnimInstance, for Attack Montage
 
 // Sets default values
 ASH_Character::ASH_Character()
@@ -55,6 +56,13 @@ ASH_Character::ASH_Character()
 
 	// for jump speed
 	GetCharacterMovement()->JumpZVelocity = 450.0f;
+
+	// for attack's montage
+	IsAttacking = false;
+
+	// for attack combo
+	MaxCombo = 4;
+	AttackEndComboState(); // 콤보가 끝난 상태로 초기화
 }
 
 // Called when the game starts or when spawned
@@ -189,6 +197,36 @@ void ASH_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	// for jump
 	PlayerInputComponent->BindAction(TEXT("Jump"),EInputEvent::IE_Pressed, this, &ACharacter::Jump);
+	// for Attack
+	PlayerInputComponent->BindAction(TEXT("SH_Attack"), EInputEvent::IE_Pressed, this, &ASH_Character::Attack);
+}
+
+void ASH_Character::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	// 델리게이트 사용을 위해 애님인스턴스를 임시로 가져온다.
+	SHAnim = Cast<USH_AnimInstance>(GetMesh()->GetAnimInstance());
+	
+	// 거짓이면 매크로 출력
+	SH_CHECK(SHAnim != nullptr);
+
+	// 애님인스턴스에 있는 함수를 캐릭터 클래스에 델리게이트 등록.
+	SHAnim->OnMontageEnded.AddDynamic(this, &ASH_Character::OnAttackMontageEnded);
+
+	// 애님 인스턴스에서 OnNextAttackCheck.BroadCast를 하면 람다함수가 호출됨.
+	SHAnim->OnNextAttackCheck.AddLambda([this]()->void {
+		
+		SH_LOG(Warning, TEXT("OnNextAttackCheck"));
+		
+		CanNextCombo = false;
+		// 콤보공격이 적절한 타이밍에 들어왔다면
+		if (IsComboInputOn)
+		{
+			AttackStartComboState();
+			SHAnim->JumpToAttackMontageSection(CurrentCombo);
+		}
+	});
 }
 
 // for forward, back move
@@ -316,4 +354,58 @@ void ASH_Character::ViewChange()
 	default:
 		break;
 	}
+}
+
+void ASH_Character::Attack()
+{
+	// 마우스 왼쪽 클릭할때마다 실행됨.
+	SH_LOG_S(Error);
+
+	// 공격중이면 반환
+	if (IsAttacking)
+	{
+		SH_CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
+		
+		// 다음 콤보가 남아있다면
+		if (CanNextCombo)
+		{
+			// 콤보 연계를 true로 해준다.
+			IsComboInputOn = true;
+		}
+	}
+	else
+	{
+		// CurrentCombo가 제대로 초기화 됐는지 체크
+		SH_CHECK(CurrentCombo == 0);
+		AttackStartComboState(); // 최초 콤보 시작.
+		// 애님 인스턴스의 함수를 캐릭터에서 호출함.
+		SHAnim->PlayAttackMontage(); // 공격 몽타주를 실행.
+		SHAnim->JumpToAttackMontageSection(CurrentCombo);
+		IsAttacking = true; // 공격중
+	}
+}
+
+// 다이나믹 델리게이트 함수. 공격 몽타주가 끝나면 실행해주길 바라는 함수.
+void ASH_Character::OnAttackMontageEnded(UAnimMontage * Montage, bool bInterrupted)
+{
+	SH_CHECK(IsAttacking);
+	SH_CHECK(CurrentCombo > 0);
+	IsAttacking = false;
+	AttackEndComboState();
+}
+
+void ASH_Character::AttackStartComboState()
+{
+	CanNextCombo = true;
+	IsComboInputOn = false;
+	SH_CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 0, MaxCombo - 1));
+	CurrentCombo = FMath::Clamp<int32>(CurrentCombo + 1, 1, MaxCombo);
+}
+
+void ASH_Character::AttackEndComboState()
+{
+	// 전부 초기화
+	IsComboInputOn = false;
+	CanNextCombo = false;
+	CurrentCombo = 0;
 }
