@@ -147,7 +147,7 @@ void ASH_Character::Tick(float DeltaTime)
 
 	// 매 프레임마다 카메라 손잡이 거리 계산
 	// InterpTo(현재 값, 최종 목표값, 시간, 보간속도)
-	 SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, ArmLengthTo, DeltaTime, ArmLengthSpeed);
+	SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, ArmLengthTo, DeltaTime, ArmLengthSpeed);
 
 	switch (CurrentControlMode)
 	{
@@ -196,7 +196,7 @@ void ASH_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction(TEXT("SH_ViewChange"), EInputEvent::IE_Pressed, this, &ASH_Character::ViewChange);
 
 	// for jump
-	PlayerInputComponent->BindAction(TEXT("Jump"),EInputEvent::IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 	// for Attack
 	PlayerInputComponent->BindAction(TEXT("SH_Attack"), EInputEvent::IE_Pressed, this, &ASH_Character::Attack);
 }
@@ -207,18 +207,18 @@ void ASH_Character::PostInitializeComponents()
 
 	// 델리게이트 사용을 위해 애님인스턴스를 임시로 가져온다.
 	SHAnim = Cast<USH_AnimInstance>(GetMesh()->GetAnimInstance());
-	
+
 	// 거짓이면 매크로 출력
 	SH_CHECK(SHAnim != nullptr);
 
 	// 애님인스턴스에 있는 함수를 캐릭터 클래스에 델리게이트 등록.
 	SHAnim->OnMontageEnded.AddDynamic(this, &ASH_Character::OnAttackMontageEnded);
 
-	// 애님 인스턴스에서 OnNextAttackCheck.BroadCast를 하면 람다함수가 호출됨.
+	// 애님 인스턴스에서 OnAttackCheck.BroadCast를 하면 람다함수가 호출됨.
 	SHAnim->OnNextAttackCheck.AddLambda([this]()->void {
-		
-		SH_LOG(Warning, TEXT("OnNextAttackCheck"));
-		
+
+		SH_LOG(Warning, TEXT("OnNextAttackCheck Lambda Function Called! CurrentCombo : %d"), CurrentCombo);
+
 		CanNextCombo = false;
 		// 콤보공격이 적절한 타이밍에 들어왔다면
 		if (IsComboInputOn)
@@ -365,8 +365,8 @@ void ASH_Character::Attack()
 	if (IsAttacking)
 	{
 		SH_CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
-		
-		// 다음 콤보가 남아있다면
+
+		// 다음 콤보를 진행할 수 있다면
 		if (CanNextCombo)
 		{
 			// 콤보 연계를 true로 해준다.
@@ -396,9 +396,15 @@ void ASH_Character::OnAttackMontageEnded(UAnimMontage * Montage, bool bInterrupt
 
 void ASH_Character::AttackStartComboState()
 {
+	// 다음 단계로 가능
 	CanNextCombo = true;
+	// 입력값은 초기화
 	IsComboInputOn = false;
+
+	// bool(0 <= CurrentCombo <= MaxCombo - 1 (=3))
 	SH_CHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 0, MaxCombo - 1));
+
+	// 1 <= CurrentCombo + 1 <= MaxCombo(=4)
 	CurrentCombo = FMath::Clamp<int32>(CurrentCombo + 1, 1, MaxCombo);
 }
 

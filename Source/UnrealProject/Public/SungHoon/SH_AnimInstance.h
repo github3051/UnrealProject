@@ -8,7 +8,7 @@
 #include "SH_AnimInstance.generated.h"
 
 
-// for 멀티캐스트 델리게이트 선언
+// 사용자 정의 멀티캐스트 델리게이트 매크로 자료형 선언
 DECLARE_MULTICAST_DELEGATE(FOnAttackHitCheckDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnNextAttackCheckDelegate);
 
@@ -31,6 +31,7 @@ public:
 	void JumpToAttackMontageSection(int32 NewSection);
 
 public:
+	// 델리게이트 변수 선언.
 	FOnAttackHitCheckDelegate OnAttackHitCheck;
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 

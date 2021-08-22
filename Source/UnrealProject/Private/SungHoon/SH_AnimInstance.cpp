@@ -52,7 +52,8 @@ void USH_AnimInstance::JumpToAttackMontageSection(int32 NewSection)
 void USH_AnimInstance::AnimNotify_AttackHitCheck()
 {
 	SH_LOG_S(Warning);
-	// 등록된 모든 델리게이트 함수 호출
+	// 등록된 모든 델리게이트 함수 호출. 아직은 등록된게 전혀 없다.
+	// 나중에 충돌처리와 관련하여 로직을 구현할때 수정될 내용. 지금은 Broadcast하는 내용이 없다.
 	OnAttackHitCheck.Broadcast();
 }
 
@@ -66,5 +67,5 @@ void USH_AnimInstance::AnimNotify_NextAttackCheck()
 FName USH_AnimInstance::GetAttackMontageSectionName(int32 Section)
 {
 	SH_CHECK(FMath::IsWithinInclusive<int32>(Section, 1, 4), NAME_None);
-	return FName(*FString::Printf(TEXT("Attack %d"), Section));
+	return FName(*FString::Printf(TEXT("Attack%d"), Section));
 }
