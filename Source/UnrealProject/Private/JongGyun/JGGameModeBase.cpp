@@ -3,12 +3,13 @@
 
 
 #include "JongGyun/JGGameModeBase.h"
-#include "JongGyun/JGPawn.h"
+//#include "JongGyun/JGPawn.h"
+#include "JongGyun/JG_Character.h"
 #include "JongGyun/JGPlayerController.h"
 
 AJGGameModeBase::AJGGameModeBase()
 {
-	DefaultPawnClass = AJGPawn::StaticClass();
+	DefaultPawnClass = AJG_Character::StaticClass();
 	PlayerControllerClass = AJGPlayerController::StaticClass();
 }
 

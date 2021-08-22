@@ -33,7 +33,7 @@ AJGPawn::AJGPawn()
 
 	Mesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 
-	static ConstructorHelpers::FClassFinder<UAnimInstance> BOX_Anim(TEXT("/Game/JongGyun/JGWarriorAnimBP.JGWarriorAnimBP_C"));
+	static ConstructorHelpers::FClassFinder<UAnimInstance> BOX_Anim(TEXT("/Game/JongGyun/JG_WarriorAnimBP.JG_WarriorAnimBP_C"));
 	if (BOX_Anim.Succeeded())
 	{
 		Mesh->SetAnimInstanceClass(BOX_Anim.Class);
