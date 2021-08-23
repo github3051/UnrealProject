@@ -61,6 +61,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void PostInitializeComponents() override;
+	
+	// AActor 부모 클래스의 함수를 오버라이딩함.
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	// 캐릭터 클래스에서도 SpringArm, Camera component는 직접 만들어줘야한다.
 	UPROPERTY(VisibleAnywhere, Category = CAMERA)
@@ -90,6 +93,9 @@ private:
 	void AttackStartComboState();
 	void AttackEndComboState();
 
+	// for Collision by attack
+	void AttackCheck();
+
 private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	bool IsAttacking;
@@ -115,4 +121,13 @@ private:
 	// 전방선언. 애님 인스턴스를 너무 자주 사용해서 아예 변수로 만듦.
 	UPROPERTY()
 	class USH_AnimInstance* SHAnim;
+
+
+	// for Debug Drawing
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	float AttackRange;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	float AttackRadius;
+
 };

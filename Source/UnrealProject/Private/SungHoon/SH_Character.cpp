@@ -3,6 +3,7 @@
 
 #include "SungHoon/SH_Character.h"
 #include "SungHoon/SH_AnimInstance.h" // Added SH_AnimInstance, for Attack Montage
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 ASH_Character::ASH_Character()
@@ -63,13 +64,19 @@ ASH_Character::ASH_Character()
 	// for attack combo
 	MaxCombo = 4;
 	AttackEndComboState(); // 콤보가 끝난 상태로 초기화
+
+	// Set Collision channel
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("SH_Character"));
+
+	// for Debug Drawing by Capsule
+	AttackRange = 200.0f;
+	AttackRadius = 50.0f; // 반지름
 }
 
 // Called when the game starts or when spawned
 void ASH_Character::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 // Setting View
@@ -211,10 +218,11 @@ void ASH_Character::PostInitializeComponents()
 	// 거짓이면 매크로 출력
 	SH_CHECK(SHAnim != nullptr);
 
-	// 애님인스턴스에 있는 함수를 캐릭터 클래스에 델리게이트 등록.
+	// 애님인스턴스에 있는 함수를 캐릭터 클래스에 dynamic 델리게이트 등록.
 	SHAnim->OnMontageEnded.AddDynamic(this, &ASH_Character::OnAttackMontageEnded);
 
 	// 애님 인스턴스에서 OnAttackCheck.BroadCast를 하면 람다함수가 호출됨.
+	// Multicast 델리게이트
 	SHAnim->OnNextAttackCheck.AddLambda([this]()->void {
 
 		SH_LOG(Warning, TEXT("OnNextAttackCheck Lambda Function Called! CurrentCombo : %d"), CurrentCombo);
@@ -227,6 +235,28 @@ void ASH_Character::PostInitializeComponents()
 			SHAnim->JumpToAttackMontageSection(CurrentCombo);
 		}
 	});
+
+	// 공격을 위한 델리게이트 등록. OnAttackHitCheck 노티파이 실행시 자동 호출
+	// Muticast 델리게이트
+	SHAnim->OnAttackHitCheck.AddUObject(this, &ASH_Character::AttackCheck);
+}
+
+float ASH_Character::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+{
+	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	SH_LOG(Warning, TEXT("Actor : %s took damage : %f"), *GetName(), FinalDamage);
+
+	
+	// 데미지가 들어왔다면
+	if (FinalDamage > 0.0f)
+	{
+		// IsDead 변수를 true로.
+		SHAnim->SetDeadAnim();
+		// 충돌을 꺼줌.
+		SetActorEnableCollision(false);
+	}
+	
+	return FinalDamage;
 }
 
 // for forward, back move
@@ -414,4 +444,61 @@ void ASH_Character::AttackEndComboState()
 	IsComboInputOn = false;
 	CanNextCombo = false;
 	CurrentCombo = 0;
+}
+
+void ASH_Character::AttackCheck()
+{
+	// 충돌처리 결과를 받을 구조체 변수 선언
+	FHitResult HitResult;
+
+	// 탐색 방법을 위한 설정 파라미터
+	FCollisionQueryParams Params(NAME_None, false, this);
+
+	// 충돌체크 여부 bool 변수
+	bool bResult = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		GetActorLocation(),
+		GetActorLocation() + GetActorForwardVector() * AttackRange,
+		FQuat::Identity,
+		ECollisionChannel::ECC_GameTraceChannel2,
+		FCollisionShape::MakeSphere(AttackRadius), //구체
+		Params // 파라미터. 나 자신은 탐색에서 제외.
+	);
+
+#if ENABLE_DRAW_DEBUG
+	
+	FVector TraceVec = GetActorForwardVector() * AttackRange;
+	// 캡슐의 중앙값
+	FVector Center = GetActorLocation() + TraceVec * 0.5f; // 절반
+	// 캡슐의 실제 높이
+	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	// 캡슐의 Z축의 방향 설정. 쿼터니언으로 바꿈
+	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
+	// 충돌이 있으면 초록, 없으면 빨강
+	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
+	// 화면에 보이는 시간
+	float DebugLifeTime = 5.0f;
+
+	DrawDebugCapsule(GetWorld(),
+		Center,
+		HalfHeight,
+		AttackRadius,
+		CapsuleRot,
+		DrawColor,
+		false,
+		DebugLifeTime);
+
+#endif
+
+	if (bResult)
+	{
+		// 충돌한 대상이 액터라면, GC에 의해 삭제되지 않았다면(사용중이지 않아서)
+		if (HitResult.Actor.IsValid())
+		{
+			SH_LOG(Error, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
+
+			FDamageEvent DamageEvent;
+			HitResult.Actor->TakeDamage(50.0f, DamageEvent, GetController(), this);
+		}
+	}
 }

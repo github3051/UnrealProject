@@ -35,6 +35,9 @@ public:
 	FOnAttackHitCheckDelegate OnAttackHitCheck;
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 
+	// 죽는 애니메이션 설정
+	void SetDeadAnim() { IsDead = true; }
+
 private:
 	// 노티파이 함수. _이하의 내용은 노티파이 이름과 정확히 일치해야한다.
 	UFUNCTION()
@@ -54,4 +57,7 @@ private:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* AttackMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+	bool IsDead;
 };
