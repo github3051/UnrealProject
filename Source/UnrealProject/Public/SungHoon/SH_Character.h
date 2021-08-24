@@ -71,6 +71,17 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = CAMERA)
 	UCameraComponent* Camera;
 
+	
+	/*--------------------------------
+		캐릭터 무기 관련 함수 및 변수
+	---------------------------------*/
+	bool CanSetWeapon();
+	void SetWeapon(class ASHWeapon* NewWeapon);
+	
+	// 무기 관련 클래스 변수
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	class ASHWeapon* CurrentWeapon;
+
 private:
 	// for movement
 	void UpDown(const float NewAxisValue);

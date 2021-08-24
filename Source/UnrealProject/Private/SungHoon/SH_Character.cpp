@@ -3,7 +3,9 @@
 
 #include "SungHoon/SH_Character.h"
 #include "SungHoon/SH_AnimInstance.h" // Added SH_AnimInstance, for Attack Montage
+#include "SungHoon/SHWeapon.h"
 #include "DrawDebugHelpers.h"
+
 
 // Sets default values
 ASH_Character::ASH_Character()
@@ -71,6 +73,7 @@ ASH_Character::ASH_Character()
 	// for Debug Drawing by Capsule
 	AttackRange = 200.0f;
 	AttackRadius = 50.0f; // 반지름
+
 }
 
 // Called when the game starts or when spawned
@@ -257,6 +260,31 @@ float ASH_Character::TakeDamage(float DamageAmount, FDamageEvent const & DamageE
 	}
 	
 	return FinalDamage;
+}
+
+bool ASH_Character::CanSetWeapon()
+{
+	// 무기가 없다면 true
+	return (CurrentWeapon == nullptr);
+}
+
+void ASH_Character::SetWeapon(ASHWeapon * NewWeapon)
+{
+	// 애셋정보가 잘 들어왔고, 현재 무기가 없으면 통과
+	SH_CHECK(NewWeapon != nullptr && CurrentWeapon == nullptr);
+
+	// 실제 스켈레탈 메시의 소켓명과 정확히 일치해야함.
+	FName WeaponSocket(TEXT("hand_rSocket")); // string 변수
+	// 메시에 해당하는 소켓명이 존재한다면
+	if (GetMesh()->DoesSocketExist(WeaponSocket))
+	{
+		// 무기 액터를 캐릭터 매시에 붙임.
+		NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+		// 무기 액터를 이 캐릭터 클래스에 상속시킴.
+		NewWeapon->SetOwner(this);
+		// 붙인 무기 액터에 대한 클래스에 대한 포인터를 저장
+		CurrentWeapon = NewWeapon;
+	}
 }
 
 // for forward, back move
