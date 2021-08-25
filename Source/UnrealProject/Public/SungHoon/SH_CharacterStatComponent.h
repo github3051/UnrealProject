@@ -9,6 +9,7 @@
 
 
 DECLARE_MULTICAST_DELEGATE(FOnHPIsZeroDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnHPChangedDelegate);
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -31,12 +32,16 @@ public:
 	void SetNewLevel(int32 NewLevel);
 	// 데미지를 받은것을 처리함.
 	void SetDamage(float NewDamage);
+	// HP 설정
+	void SetHP(float NewHP);
+	// 현재 HP % 비율
+	float GetHPRatio();
 	// 해당 레벨의 player의 공격력을 가져옴
 	float GetAttack();
 
 	// 델리게이트 변수
 	FOnHPIsZeroDelegate OnHPIsZero;
-
+	FOnHPChangedDelegate OnHPChanged;
 
 private:
 	// 구조체 전방선언

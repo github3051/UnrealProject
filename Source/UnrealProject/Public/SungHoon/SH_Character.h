@@ -94,6 +94,11 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = Stat)
 	class USH_CharacterStatComponent* CharacterStat;
 
+	// UI 위젯을 위한 클래스 전방선언.
+	UPROPERTY(VisibleAnywhere, Category = UI)
+	class UWidgetComponent* HPBarWidget;
+
+
 private:
 	// for movement
 	void UpDown(const float NewAxisValue);

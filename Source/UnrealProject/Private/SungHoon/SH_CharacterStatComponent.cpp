@@ -23,7 +23,7 @@ void USH_CharacterStatComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	
+
 }
 
 void USH_CharacterStatComponent::InitializeComponent()
@@ -53,7 +53,7 @@ void USH_CharacterStatComponent::SetNewLevel(int32 NewLevel)
 		// 현재 레벨을 새로운 레벨로 직접 설정
 		Level = NewLevel;
 		// 현재 HP는 새로운 레벨(NewLevel)에 해당하는 MaxHP값으로 수정. 풀피됨
-		CurrentHP = CurrentStatData->MaxHP; // 레벨업 상황이라고 보면됨.
+		SetHP(CurrentStatData->MaxHP); // 레벨업 상황이라고 보면됨.
 	}
 	else
 	{
@@ -68,14 +68,31 @@ void USH_CharacterStatComponent::SetDamage(float NewDamage)
 	// 최초 1레벨때 초기화되면서 가지게 됨. InitializeComponent에서
 	SH_CHECK(CurrentStatData != nullptr);
 	// 데미지가 들어온것을 최소 0 ~ 최대 HP 값 사이로 한정지음. 0 밑으로 못가게 막는 역할.
-	CurrentHP = FMath::Clamp<float>(CurrentHP - NewDamage, 0.0f, CurrentStatData->MaxHP);
+	SetHP(FMath::Clamp<float>(CurrentHP - NewDamage, 0.0f, CurrentStatData->MaxHP));
+}
 
+void USH_CharacterStatComponent::SetHP(float NewHP)
+{
+	CurrentHP = NewHP;
+	// OnHPChanged와 바인딩된 델리게이트 함수들 모두 호출한다. 이벤트 발동!
+	OnHPChanged.Broadcast();
 	// 현재HP가 0이라면 (모두 소진했다면)
-	if (CurrentHP <= 0.0f)
+	// KINDA_SMALL_NUMBER : 0과 비교할때 무시 가능한 오차를 측정할때 사용. (=매우 작은 양수)
+	if (CurrentHP < KINDA_SMALL_NUMBER)
 	{
+		// 매우작은 양수 이하라면 0으로 셋팅
+		CurrentHP = 0.0f;
 		// OnHPIsZero와 바인딩된 델리게이트 함수들 모두 호출한다. 이벤트 발동!
 		OnHPIsZero.Broadcast();
 	}
+}
+
+float USH_CharacterStatComponent::GetHPRatio()
+{
+	// CurrentStatData가 정상적으로 있다면 통과
+	SH_CHECK(CurrentStatData != nullptr, 0.0f);
+	// 매우 작은 양수 이하라면 0으로 출력, 그게 아니라면 현재 HP / 최대 HP => 소수점으로 나옴. x100하면 백분위%임.
+	return (CurrentStatData->MaxHP < KINDA_SMALL_NUMBER) ? 0.0f : (CurrentHP / CurrentStatData->MaxHP);
 }
 
 // 해당 레벨의 player의 공격력을 가져옴
@@ -86,8 +103,6 @@ float USH_CharacterStatComponent::GetAttack()
 	SH_CHECK(CurrentStatData != nullptr, 0.0f);
 	return CurrentStatData->Attack;
 }
-
-
 
 
 // Called every frame

@@ -6,6 +6,8 @@
 #include "SungHoon/SHWeapon.h"
 #include "SungHoon/SH_CharacterStatComponent.h" // 전방선언한거 구체화
 #include "DrawDebugHelpers.h"
+#include "Components/WidgetComponent.h"
+#include "SungHoon/SH_CharacterWidget.h"
 
 
 // Sets default values
@@ -77,12 +79,50 @@ ASH_Character::ASH_Character()
 
 	// CharacterStat 컴포넌트 생성.
 	CharacterStat = CreateDefaultSubobject<USH_CharacterStatComponent>(TEXT("SH_CHARACTERSTAT"));
+	
+	/*--------------------------------
+					UI
+	---------------------------------*/
+	// HPBar UI 위젯
+	HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("SH_HPBARWIDGET"));
+	// 메시에 부착
+	HPBarWidget->SetupAttachment(GetMesh());
+	// 화면상의 최초 위치 조정
+	HPBarWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 180.0f));
+	// 항상 플레이어의 화면을 향해 보도록 Screen 모드 설정.
+	HPBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	// 애셋 가져오기. 형태는 UUserWidget이다. 클래스형태. 경로에 _C 넣어주기.
+	static ConstructorHelpers::FClassFinder<UUserWidget> SH_UI_HUD(TEXT(
+		"/Game/SungHoon/UI/SH_HPBar.SH_HPBar_C"));
+	if (SH_UI_HUD.Succeeded())
+	{
+		// 애셋을 설정함. 위젯은 클래스임.
+		HPBarWidget->SetWidgetClass(SH_UI_HUD.Class);
+		// 위젯의 크기 지정
+		HPBarWidget->SetDrawSize(FVector2D(150.0f, 50.0f));
+	}
+
 }
 
 // Called when the game starts or when spawned
 void ASH_Character::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	
+	/*
+		언리얼 4.21 이후로는 위젯의 초기화 시점이 PostInitializeComponents에서 BeginPlay로 변경됨.
+		올바르게 동작하려면 위젯들은 BeginPlay에 추가하도록 하자.
+	*/
+
+	// 캐릭터 위젯 델리게이트 연결. HPBar 위젯에 연결되어있는 (부모) 위젯 클래스 정보를 가져옴. (일종의 애님인스턴스 가져오기)
+	auto CharacterWidget = Cast<USH_CharacterWidget>(HPBarWidget->GetUserWidgetObject());
+	// 유효하다면
+	if (CharacterWidget != nullptr)
+	{
+		// 캐릭터가 들고있는 CharacterStat 정보를 넘김.
+		CharacterWidget->BindCharacterStat(CharacterStat);
+	}
 }
 
 // Setting View
@@ -256,6 +296,8 @@ void ASH_Character::PostInitializeComponents()
 		// 충돌처리 꺼줌
 		SetActorEnableCollision(false);
 	});
+
+
 }
 
 float ASH_Character::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
