@@ -4,6 +4,7 @@
 #include "SungHoon/SH_Character.h"
 #include "SungHoon/SH_AnimInstance.h" // Added SH_AnimInstance, for Attack Montage
 #include "SungHoon/SHWeapon.h"
+#include "SungHoon/SH_CharacterStatComponent.h" // 전방선언한거 구체화
 #include "DrawDebugHelpers.h"
 
 
@@ -74,6 +75,8 @@ ASH_Character::ASH_Character()
 	AttackRange = 200.0f;
 	AttackRadius = 50.0f; // 반지름
 
+	// CharacterStat 컴포넌트 생성.
+	CharacterStat = CreateDefaultSubobject<USH_CharacterStatComponent>(TEXT("SH_CHARACTERSTAT"));
 }
 
 // Called when the game starts or when spawned
@@ -224,6 +227,7 @@ void ASH_Character::PostInitializeComponents()
 	// 애님인스턴스에 있는 함수를 캐릭터 클래스에 dynamic 델리게이트 등록.
 	SHAnim->OnMontageEnded.AddDynamic(this, &ASH_Character::OnAttackMontageEnded);
 
+	// 몽타주 애니메이션에서 NextAttackCheck 노티파이가 실행되면 호출하는 델리게이트 함수(이벤트)
 	// 애님 인스턴스에서 OnAttackCheck.BroadCast를 하면 람다함수가 호출됨.
 	// Multicast 델리게이트
 	SHAnim->OnNextAttackCheck.AddLambda([this]()->void {
@@ -239,26 +243,29 @@ void ASH_Character::PostInitializeComponents()
 		}
 	});
 
-	// 공격을 위한 델리게이트 등록. OnAttackHitCheck 노티파이 실행시 자동 호출
+	// 공격을 위한 델리게이트 등록. 몽타주 애니메이션의 AttackHitCheck 노티파이 실행시 자동 호출
 	// Muticast 델리게이트
 	SHAnim->OnAttackHitCheck.AddUObject(this, &ASH_Character::AttackCheck);
+
+	// 죽는것에 대한 이벤트를 등록하기 위한 델리게이트 등록!
+	CharacterStat->OnHPIsZero.AddLambda([this]()->void {
+
+		SH_LOG(Error, TEXT("OnHPIsZero Delegate function call!"));
+		// 죽음 설정
+		SHAnim->SetDeadAnim();
+		// 충돌처리 꺼줌
+		SetActorEnableCollision(false);
+	});
 }
 
 float ASH_Character::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
 {
+	// 최종적으로 넘어오는 데미지값.
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	SH_LOG(Warning, TEXT("Actor : %s took damage : %f"), *GetName(), FinalDamage);
 
-	
-	// 데미지가 들어왔다면
-	if (FinalDamage > 0.0f)
-	{
-		// IsDead 변수를 true로.
-		SHAnim->SetDeadAnim();
-		// 충돌을 꺼줌.
-		SetActorEnableCollision(false);
-	}
-	
+	// 최종 데미지를 스탯에서 연산해줌.
+	CharacterStat->SetDamage(FinalDamage);
 	return FinalDamage;
 }
 

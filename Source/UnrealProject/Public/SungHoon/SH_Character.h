@@ -39,6 +39,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = DEBUGING)
 	FVector DirectionToMove;
 
+	/*--------------------------------
+				Camera
+	---------------------------------*/
 	// for SpringArm's InterpTo values. 화면전환에 쓰일 변수
 	// 카메라까지 거리
 	UPROPERTY(VisibleAnywhere, Category = DEBUGING)
@@ -53,6 +56,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = DEBUGING)
 	float ArmRotationSpeed = 0.0f;
 
+	////////////////////////////////
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -65,22 +70,29 @@ public:
 	// AActor 부모 클래스의 함수를 오버라이딩함.
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	/*--------------------------------
+				Camera
+	---------------------------------*/
 	// 캐릭터 클래스에서도 SpringArm, Camera component는 직접 만들어줘야한다.
 	UPROPERTY(VisibleAnywhere, Category = CAMERA)
 	USpringArmComponent* SpringArm;
 	UPROPERTY(VisibleAnywhere, Category = CAMERA)
 	UCameraComponent* Camera;
-
 	
 	/*--------------------------------
 		캐릭터 무기 관련 함수 및 변수
 	---------------------------------*/
+	// 무기를 들 수 있는지
 	bool CanSetWeapon();
+	// 무기 장착함수
 	void SetWeapon(class ASHWeapon* NewWeapon);
-	
 	// 무기 관련 클래스 변수
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	class ASHWeapon* CurrentWeapon;
+
+	// 전방선언 및 클래스 포인터 변수 (헤더 추가 안해도됨. 있다고만 알림)
+	UPROPERTY(VisibleAnywhere, Category = Stat)
+	class USH_CharacterStatComponent* CharacterStat;
 
 private:
 	// for movement
@@ -111,9 +123,9 @@ private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	bool IsAttacking;
 
-	////////////
-	// for Attack Combo
-
+	/*--------------------------------
+				Attack Combo
+	---------------------------------*/
 	// 다음 콤보로 이동 가능 여부
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	bool CanNextCombo;
@@ -127,12 +139,11 @@ private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	int32 MaxCombo;
 
-	////////////
+	////////////////////////////////
 
 	// 전방선언. 애님 인스턴스를 너무 자주 사용해서 아예 변수로 만듦.
 	UPROPERTY()
 	class USH_AnimInstance* SHAnim;
-
 
 	// for Debug Drawing
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
