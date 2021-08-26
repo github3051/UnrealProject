@@ -8,6 +8,7 @@
 #include "DrawDebugHelpers.h"
 #include "Components/WidgetComponent.h"
 #include "SungHoon/SH_CharacterWidget.h"
+#include "SungHoon/SH_AIController.h"
 
 
 // Sets default values
@@ -55,7 +56,7 @@ ASH_Character::ASH_Character()
 	}
 
 	// Set default 컨트롤 모드 설정. DIABLO 방식
-	SetControlMode(EControlMode::GTA);
+	// SetControlMode(EControlMode::GTA); // -> Possessedby에서 초기화
 
 	ArmLengthSpeed = 3.0f;
 	ArmRotationSpeed = 10.0f; // 회전 속도
@@ -102,6 +103,13 @@ ASH_Character::ASH_Character()
 		HPBarWidget->SetDrawSize(FVector2D(150.0f, 50.0f));
 	}
 
+	/*--------------------------------
+					AI
+	---------------------------------*/
+	// AI 컨트롤러 설정으로 SH_AIController 클래스로 셋팅
+	AIControllerClass = ASH_AIController::StaticClass();
+	// 자동 AI 설정으로 월드에 미리 배치되거나 새로 생성되는 모든것들을 의미함.
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 // Called when the game starts or when spawned
@@ -186,6 +194,14 @@ void ASH_Character::SetControlMode(const EControlMode& NewControlMode)
 
 		// 캐릭터 메시의 회전속도 지정 bUseControllerDesiredRotation의 전환 속도를 의미.
 		GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
+		break;
+
+	case EControlMode::NPC:
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		// 회전 속도
+		GetCharacterMovement()->RotationRate = FRotator(0.0f, 480.0f, 0.0f);
 		break;
 
 	default:
@@ -309,6 +325,30 @@ float ASH_Character::TakeDamage(float DamageAmount, FDamageEvent const & DamageE
 	// 최종 데미지를 스탯에서 연산해줌.
 	CharacterStat->SetDamage(FinalDamage);
 	return FinalDamage;
+}
+
+// 빙의 됐을때 호출
+void ASH_Character::PossessedBy(AController * NewController)
+{
+	Super::PossessedBy(NewController);
+	// 빙의 되고 로그 찍어보기
+	SH_LOG_S(Warning);
+
+	// 플레이어라면
+	if (IsPlayerControlled())
+	{
+		SetControlMode(EControlMode::GTA);
+		// 최대 이동 속도
+		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+	}
+	// AI 라면
+	else
+	{
+		// NPC 설정
+		SetControlMode(EControlMode::NPC);
+		// 최대 이동 속도
+		GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+	}
 }
 
 bool ASH_Character::CanSetWeapon()
@@ -499,6 +539,8 @@ void ASH_Character::OnAttackMontageEnded(UAnimMontage * Montage, bool bInterrupt
 	SH_CHECK(CurrentCombo > 0);
 	IsAttacking = false;
 	AttackEndComboState();
+	// 공격 애니메이션이 끝나면 관련된 모든 함수를 호출함.
+	OnAttackEnd.Broadcast();
 }
 
 void ASH_Character::AttackStartComboState()

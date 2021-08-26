@@ -7,12 +7,16 @@
 #include "GameFramework/Character.h"
 #include "SH_Character.generated.h"
 
+// 공격이 끝나는지를 알려주는 멀티캐스트 델리게이트 선언
+DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
+
 
 UENUM()
 enum class EControlMode
 {
 	GTA,
-	DIABLO
+	DIABLO,
+	NPC
 };
 
 UCLASS()
@@ -70,6 +74,10 @@ public:
 	// AActor 부모 클래스의 함수를 오버라이딩함.
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	// 폰이 빙의 됐을때 자동 호출되는 함수.
+	virtual void PossessedBy(AController* NewController) override;
+
+
 	/*--------------------------------
 				Camera
 	---------------------------------*/
@@ -98,6 +106,13 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = UI)
 	class UWidgetComponent* HPBarWidget;
 
+	/*--------------------------------
+				Attack
+	---------------------------------*/
+	// 공격했을때 함수.
+	// for attack animation montage
+	void Attack();
+	FOnAttackEndDelegate OnAttackEnd;
 
 private:
 	// for movement
@@ -110,8 +125,6 @@ private:
 
 	// for View control mode
 	void ViewChange();
-	// for attack animation montage
-	void Attack();
 
 	// for delegate for OnAttackMontage (몽타주가 끝나면 수행)
 	UFUNCTION()
