@@ -9,6 +9,13 @@
 #include "Components/WidgetComponent.h"
 #include "SungHoon/SH_CharacterWidget.h"
 #include "SungHoon/SH_AIController.h"
+#include "SungHoon/SH_GameInstance.h"
+
+/*---------------------------------
+		UnrealProjectSetting
+----------------------------------*/
+// UnrealProjectSetting 모듈에 있는거 추가
+#include "SH_CharacterSetting.h" 
 
 
 // Sets default values
@@ -110,13 +117,31 @@ ASH_Character::ASH_Character()
 	AIControllerClass = ASH_AIController::StaticClass();
 	// 자동 AI 설정으로 월드에 미리 배치되거나 새로 생성되는 모든것들을 의미함.
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+
+	///*--------------------------------
+	//				TEST
+	//---------------------------------*/
+
+	//// 메모리에 이미 올라간 CDO(클래스 기본 객체)를 읽어옴
+	//auto DefaultSetting = GetDefault<USH_CharacterSetting>();
+
+	//// SH_CharacterSetting 오브젝트에 있는 CharacterAssets의 정보의 개수가 1개 이상이라면
+	//if (DefaultSetting->CharacterAssets.Num() > 0)
+	//{
+	//	// 해당 TArray에 저장된 경로 문자열을 하나씩 읽어옴.
+	//	for (auto CharacterAsset : DefaultSetting->CharacterAssets)
+	//	{
+	//		// 하나씩 데이터를 읽어와 문자열로 표기
+	//		SH_LOG(Warning, TEXT("Character Asset : %s"), *CharacterAsset.ToString());
+	//	}
+	//}
 }
 
 // Called when the game starts or when spawned
 void ASH_Character::BeginPlay()
 {
 	Super::BeginPlay();
-	
 	
 	/*
 		언리얼 4.21 이후로는 위젯의 초기화 시점이 PostInitializeComponents에서 BeginPlay로 변경됨.
@@ -131,6 +156,29 @@ void ASH_Character::BeginPlay()
 		// 캐릭터가 들고있는 CharacterStat 정보를 넘김.
 		CharacterWidget->BindCharacterStat(CharacterStat);
 	}
+
+	// 플레이어가 아니라면 = AI라면
+	if (!IsPlayerControlled())
+	{
+		// USH_CharacterSetting에 대한 CDO 읽어옴
+		auto DefaultSetting = GetDefault<USH_CharacterSetting>();
+
+		// ini에서 읽어온 개수. 배열의 0번 인덱스부터 시작하므로 -1 해줌.
+		int32 RandIndex = FMath::RandRange(0, DefaultSetting->CharacterAssets.Num() - 1);
+		// 애셋 경로를 하나 읽어옴
+		CharacterAssetToLoad = DefaultSetting->CharacterAssets[RandIndex];
+		// 현재 프로젝트 설정의 게임 인스턴스를 가져옴. 그걸 캐스팅 (헤더 추가 필요)
+		auto SHGameInstance = Cast<USH_GameInstance>(GetGameInstance());
+		// 성공적이라면
+		if (SHGameInstance != nullptr)
+		{
+			// 비동기 방식으로 게임 실행중에도 경로에 있는 애셋을 요청함. 그리고 델리게이트 바인딩된 함수 실행함.
+			AssetStreamingHandle = SHGameInstance->StreamableManager.RequestAsyncLoad(
+				CharacterAssetToLoad, FStreamableDelegate::CreateUObject(
+					this, &ASH_Character::OnAssetLoadCompleted));
+		}
+	}
+
 }
 
 // Setting View
@@ -620,4 +668,21 @@ void ASH_Character::AttackCheck()
 			HitResult.Actor->TakeDamage(50.0f, DamageEvent, GetController(), this);
 		}
 	}
+}
+
+
+// BeginPlay에서 등록된 델리게이트 함수
+void ASH_Character::OnAssetLoadCompleted()
+{
+	USkeletalMesh* AssetLoaded = Cast<USkeletalMesh>(AssetStreamingHandle->GetLoadedAsset());
+
+	// 포인터 리셋 시킴. Shared 포인터는 한번 사용했으면 이제 초기화 해줘야함.
+	AssetStreamingHandle.Reset();
+	// 제대로 애셋 정보를 가져왔다면
+	if (AssetLoaded != nullptr)
+	{
+		// 메시에 등록함. 원래 생성자에
+		GetMesh()->SetSkeletalMesh(AssetLoaded);
+	}
+
 }

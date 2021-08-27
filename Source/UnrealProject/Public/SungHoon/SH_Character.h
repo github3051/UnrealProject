@@ -114,6 +114,8 @@ public:
 	void Attack();
 	FOnAttackEndDelegate OnAttackEnd;
 
+
+	// private 멤버 함수
 private:
 	// for movement
 	void UpDown(const float NewAxisValue);
@@ -136,6 +138,9 @@ private:
 
 	// for Collision by attack
 	void AttackCheck();
+
+	// for Asset load
+	void OnAssetLoadCompleted();
 
 private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
@@ -169,5 +174,11 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	float AttackRadius;
+
+
+	// FSoftObjectPath 경로명을 nullptr로 일단 지정
+	FSoftObjectPath CharacterAssetToLoad = FSoftObjectPath(nullptr);
+	// FStreamableHandle 구조체 shared ptr로 전방선언.
+	TSharedPtr<struct FStreamableHandle> AssetStreamingHandle;
 
 };

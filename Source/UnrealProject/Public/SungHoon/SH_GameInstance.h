@@ -6,8 +6,15 @@
 #include "../../UnrealProject.h" // for EngineMinimal
 #include "Engine/DataTable.h" // for FTableRowBase clas
 #include "Engine/GameInstance.h"
+
+// 게임 진행중에도 비동기 방식으로 애셋을 로딩하는 클래스
+#include "Engine/StreamableManager.h" // Added
+
 #include "SH_GameInstance.generated.h"
 
+/*
+	프로젝트에서 유일한 인스턴스로 동작함.
+*/
 
 USTRUCT(BlueprintType)
 struct FSHCharacterData : public FTableRowBase
@@ -51,6 +58,9 @@ public:
 
 	// 레벨에 맞는 열(Row)의 FSHCharacterData를 반환해줌. 위 구조체.
 	FSHCharacterData* GetSHCharacterData(int32 Level);
+	
+	// 게임 진행중에도 비동기 방식으로 애셋을 로딩하는 클래스
+	FStreamableManager StreamableManager;
 
 private:
 	// 전방선언 & 데이터 테이블을 읽어올 포인터 변수 선언

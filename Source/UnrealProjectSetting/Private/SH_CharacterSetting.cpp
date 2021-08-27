@@ -3,3 +3,8 @@
 
 #include "SH_CharacterSetting.h"
 
+
+USH_CharacterSetting::USH_CharacterSetting()
+{
+
+}
