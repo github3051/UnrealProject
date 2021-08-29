@@ -2,7 +2,7 @@
 
 
 #include "SungHoon/SH_ItemBox.h"
-#include "SungHoon/SHWeapon.h" 
+#include "SungHoon/SH_Weapon.h" 
 #include "SungHoon/SH_Character.h"
 
 // Sets default values
@@ -41,7 +41,7 @@ ASH_ItemBox::ASH_ItemBox()
 	Box->SetCollisionProfileName(TEXT("NoCollision"));
 
 	// SHWeapon 클래스 정보를 가져옴. 헤더파일 추가해야함.
-	WeaponItemClass = ASHWeapon::StaticClass();
+	WeaponItemClass = ASH_Weapon::StaticClass();
 
 	/*-------------
 		Effect
@@ -78,13 +78,6 @@ void ASH_ItemBox::PostInitializeComponents()
 	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ASH_ItemBox::OnCharacterOverlap);
 }
 
-// Called every frame
-void ASH_ItemBox::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 void ASH_ItemBox::OnCharacterOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
 	// 겹치면 로그만 띄우도록 해보자.
@@ -102,7 +95,7 @@ void ASH_ItemBox::OnCharacterOverlap(UPrimitiveComponent * OverlappedComp, AActo
 		if (SHCharacter->CanSetWeapon())
 		{
 			// 무기 액터를 생성함.
-			auto NewWeapon = GetWorld()->SpawnActor<ASHWeapon>(WeaponItemClass, FVector::ZeroVector, FRotator::ZeroRotator);
+			auto NewWeapon = GetWorld()->SpawnActor<ASH_Weapon>(WeaponItemClass, FVector::ZeroVector, FRotator::ZeroRotator);
 			// 생성한 무기 액터를 캐릭터에 장착
 			SHCharacter->SetWeapon(NewWeapon);
 

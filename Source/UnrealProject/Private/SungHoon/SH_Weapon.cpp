@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "SungHoon/SHWeapon.h"
+#include "SungHoon/SH_Weapon.h"
 
 // Sets default values
-ASHWeapon::ASHWeapon()
+ASH_Weapon::ASH_Weapon()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false; // 굳이 필요없음
@@ -28,16 +28,8 @@ ASHWeapon::ASHWeapon()
 }
 
 // Called when the game starts or when spawned
-void ASHWeapon::BeginPlay()
+void ASH_Weapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
-
-// Called every frame
-void ASHWeapon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-

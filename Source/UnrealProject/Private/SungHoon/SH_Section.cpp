@@ -4,6 +4,8 @@
 #include "SungHoon/SH_Section.h"
 #include "SungHoon/SH_Character.h"
 #include "SungHoon/SH_ItemBox.h"
+#include "SungHoon/SH_PlayerController.h"
+#include "SungHoon/SH_GameModeBase.h" // for OnKeyNPCDestroyed
 
 // Sets default values
 ASH_Section::ASH_Section()
@@ -278,7 +280,35 @@ void ASH_Section::OnGateTriggerBeginOverlap(UPrimitiveComponent * OverlappedComp
 // AI 생성 함수
 void ASH_Section::OnNPCSpawn()
 {
+	// 타이머를 먼저 초기화 해줌
+	GetWorld()->GetTimerManager().ClearTimer(SpawnNPCTimerHandle);
 	// 현재 맵의 중앙 위치값 + 88.0f 높이 위로, 회전값은 기본값으로 액터를생성시킨다.
-	GetWorld()->SpawnActor<ASH_Character>(GetActorLocation() + FVector::UpVector*88.0f, FRotator::ZeroRotator);
+	auto KeyNPC = GetWorld()->SpawnActor<ASH_Character>(
+		GetActorLocation() + FVector::UpVector*88.0f, FRotator::ZeroRotator);
+
+	if (KeyNPC != nullptr)
+	{
+		// NPC(액터)가 파괴되었을때 자동으로 해당 함수 호출함.
+		KeyNPC->OnDestroyed.AddDynamic(this, &ASH_Section::OnKeyNPCDestroyed);
+	}
+}
+
+void ASH_Section::OnKeyNPCDestroyed(AActor * DestoryedActor)
+{
+	// 파괴된 액터정보를 가져옴
+	auto SHCharacter = Cast<ASH_Character>(DestoryedActor);
+	SH_CHECK(SHCharacter != nullptr);
+
+	// 마지막에 공격한 대상 정보를 가져옴
+	auto SHPlayerController = Cast<ASH_PlayerController>(SHCharacter->LastHitBy);
+	SH_CHECK(SHPlayerController != nullptr);
+
+	// 게임모드 가져옴
+	auto SHGameMode = Cast<ASH_GameModeBase>(GetWorld()->GetAuthGameMode());
+	SH_CHECK(SHGameMode != nullptr);
+	SHGameMode->AddScore(SHPlayerController);
+
+	// NPC가 죽었으므로 State 재설정
+	SetState(ESectionState::COMPLETE);
 }
 

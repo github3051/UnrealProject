@@ -34,16 +34,21 @@ ASH_AIController::ASH_AIController()
 	}
 }
 
+// 컨트롤러가 AI 폰을 빙의했을때 먼저 호출.
 void ASH_AIController::OnPossess(APawn * InPawn)
 {
 	Super::OnPossess(InPawn);
 	SH_LOG_S(Error);
+}
 
+// 비헤이비어 트리 실행
+void ASH_AIController::RunAI()
+{
 	// 블랙보드 사용가능하다면 실행.
 	if (UseBlackboard(BBAsset, Blackboard))
 	{
 		// 블랙보드의 HomePosKey 값을 현재 폰의 위치로 설정하라. (최초위치)
-		Blackboard->SetValueAsVector(HomePosKey, InPawn->GetActorLocation());
+		Blackboard->SetValueAsVector(HomePosKey, GetPawn()->GetActorLocation());
 		// 만약 비헤이비어 트리를 작동할 수 없다면
 		if (!RunBehaviorTree(BTAsset))
 		{
@@ -57,3 +62,15 @@ void ASH_AIController::OnPossess(APawn * InPawn)
 	}
 }
 
+// 비헤이비어 트리 중단
+void ASH_AIController::StopAI()
+{
+	// BrainComponent :AIController에 있는 멤버변수. 비헤이비어트리 컴포넌트를 가져옴
+	auto BehaviorTreeComponent = Cast<UBehaviorTreeComponent>(BrainComponent);
+	
+	if (BehaviorTreeComponent != nullptr)
+	{
+		// 비헤이비어트리 중단.
+		BehaviorTreeComponent->StopTree(EBTStopMode::Safe);
+	}
+}

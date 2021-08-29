@@ -3,13 +3,16 @@
 
 #include "SungHoon/SH_Character.h"
 #include "SungHoon/SH_AnimInstance.h" // Added SH_AnimInstance, for Attack Montage
-#include "SungHoon/SHWeapon.h"
+#include "SungHoon/SH_Weapon.h"
 #include "SungHoon/SH_CharacterStatComponent.h" // 전방선언한거 구체화
 #include "DrawDebugHelpers.h"
 #include "Components/WidgetComponent.h"
 #include "SungHoon/SH_CharacterWidget.h"
 #include "SungHoon/SH_AIController.h"
 #include "SungHoon/SH_GameInstance.h"
+#include "SungHoon/SH_PlayerController.h"
+#include "SungHoon/SH_PlayerState.h"
+#include "SungHoon/SH_HUDWidget.h"
 
 /*---------------------------------
 		UnrealProjectSetting
@@ -119,23 +122,17 @@ ASH_Character::ASH_Character()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 
-	///*--------------------------------
-	//				TEST
-	//---------------------------------*/
-
-	//// 메모리에 이미 올라간 CDO(클래스 기본 객체)를 읽어옴
-	//auto DefaultSetting = GetDefault<USH_CharacterSetting>();
-
-	//// SH_CharacterSetting 오브젝트에 있는 CharacterAssets의 정보의 개수가 1개 이상이라면
-	//if (DefaultSetting->CharacterAssets.Num() > 0)
-	//{
-	//	// 해당 TArray에 저장된 경로 문자열을 하나씩 읽어옴.
-	//	for (auto CharacterAsset : DefaultSetting->CharacterAssets)
-	//	{
-	//		// 하나씩 데이터를 읽어와 문자열로 표기
-	//		SH_LOG(Warning, TEXT("Character Asset : %s"), *CharacterAsset.ToString());
-	//	}
-	//}
+	// CardBoard 에셋 번호
+	AssetIndex = 3;
+	// 현재 캐릭터를 숨김
+	SetActorHiddenInGame(true);
+	// UI도 숨김
+	HPBarWidget->SetHiddenInGame(true);
+	// 데미지 프레임워크 끔
+	SetCanBeDamaged(false);
+	
+	// 죽음 지연 시간 5초
+	DeadTimer = 5.0f;
 }
 
 // Called when the game starts or when spawned
@@ -157,16 +154,44 @@ void ASH_Character::BeginPlay()
 		CharacterWidget->BindCharacterStat(CharacterStat);
 	}
 
-	// 플레이어가 아니라면 = AI라면
-	if (!IsPlayerControlled())
-	{
-		// USH_CharacterSetting에 대한 CDO 읽어옴
-		auto DefaultSetting = GetDefault<USH_CharacterSetting>();
+	// 플레이어 컨트롤러 값을 가져옴
+	bIsPlayer = IsPlayerControlled();
+	
 
+	// 플레이어라면
+	if (bIsPlayer)
+	{
+		// 플레이어 컨트롤러 가져오기
+		SHPlayerController = Cast<ASH_PlayerController>(GetController());
+		// 컨트롤러 값을 제대로 캐스팅해서 가져왔다면 통과
+		SH_CHECK(SHPlayerController != nullptr);
+	}
+	// 플레이어가 아니라면 = AI라면
+	else
+	{
+		// AI 컨트롤러 가져오기
+		SHAIController = Cast<ASH_AIController>(GetController());
+		// 컨트롤러 값을 제대로 캐스팅해서 가져왔다면 통과
+		SH_CHECK(SHAIController != nullptr);
+	}
+	
+	// USH_CharacterSetting에 대한 CDO 읽어옴
+	auto DefaultSetting = GetDefault<USH_CharacterSetting>();
+
+	if (bIsPlayer)
+	{
+		AssetIndex = 3;
+	}
+	else
+	{
 		// ini에서 읽어온 개수. 배열의 0번 인덱스부터 시작하므로 -1 해줌.
-		int32 RandIndex = FMath::RandRange(0, DefaultSetting->CharacterAssets.Num() - 1);
+		AssetIndex = FMath::RandRange(0, DefaultSetting->CharacterAssets.Num() - 1);
+	}
+
+	// 애셋 지정
+	{
 		// 애셋 경로를 하나 읽어옴
-		CharacterAssetToLoad = DefaultSetting->CharacterAssets[RandIndex];
+		CharacterAssetToLoad = DefaultSetting->CharacterAssets[AssetIndex];
 		// 현재 프로젝트 설정의 게임 인스턴스를 가져옴. 그걸 캐스팅 (헤더 추가 필요)
 		auto SHGameInstance = Cast<USH_GameInstance>(GetGameInstance());
 		// 성공적이라면
@@ -177,8 +202,149 @@ void ASH_Character::BeginPlay()
 				CharacterAssetToLoad, FStreamableDelegate::CreateUObject(
 					this, &ASH_Character::OnAssetLoadCompleted));
 		}
-	}
 
+		// 현재 캐릭터 state를 LOADING으로 변경
+		SetCharacterState(ESH_CharacterState::LOADING);
+	}
+}
+
+// 캐릭터의 State를 설정
+void ASH_Character::SetCharacterState(ESH_CharacterState NewState)
+{
+	// 현재 state가 새로운 state와 다를때만 통과
+	SH_CHECK(CurrentState != NewState);
+	CurrentState = NewState;
+
+	// 현재 상태에 따른 분류
+	switch (CurrentState)
+	{
+	case ESH_CharacterState::PREINIT:
+		break;
+	case ESH_CharacterState::LOADING:
+	{
+		// 플레이어 라면
+		if (bIsPlayer)
+		{
+			// 플레이어의 조작을 막음
+			DisableInput(SHPlayerController);
+
+			// CharacterStat 정보를 HUD에 연결함.
+			SHPlayerController->GetHUDWidget()->BindCharacterStat(CharacterStat);
+
+			// 플레이어 스테이트 가져옴
+			auto SHPlayerState = Cast<ASH_PlayerState>(GetPlayerState());
+			SH_CHECK(SHPlayerState != nullptr);
+			// 플레이어의 레벨을 새롭게 레벨 설정.
+			CharacterStat->SetNewLevel(SHPlayerState->GetCharacterLevel());
+		}
+
+		// 엑터를 숨김
+		SetActorHiddenInGame(true);
+		// UI 숨김
+		HPBarWidget->SetHiddenInGame(true);
+		// 데미지 프레임워크 끔
+		SetCanBeDamaged(false);
+		break;
+	}
+	case ESH_CharacterState::READY:
+	{
+		// 액터 보이기
+		SetActorHiddenInGame(false);
+		// UI 보이기
+		HPBarWidget->SetHiddenInGame(false);
+		// 데미지 프레임워크 작동
+		SetCanBeDamaged(true);
+
+		// 캐릭터 스텟의 죽었을때의 델리게이트 함수를 바인딩함.
+		CharacterStat->OnHPIsZero.AddLambda([this]()->void {
+			// 죽음 상태로 바꿈. 자기자신 호출인셈.
+			SetCharacterState(ESH_CharacterState::DEAD);
+		});
+
+		// HPBarWidget 클래스 정보를 가져옴
+		auto CharacterWidget = Cast<USH_CharacterWidget>(HPBarWidget->GetUserWidgetObject());
+		// 제대로 위젯정보를 가져왔다면 통과
+		SH_CHECK(CharacterWidget != nullptr);
+		// 캐릭터 위젯 정보를 Character Stat과 연결지음
+		CharacterWidget->BindCharacterStat(CharacterStat);
+
+		// 플레이어라면
+		if (bIsPlayer)
+		{
+			// GTA모드로 설정
+			SetControlMode(EControlMode::GTA);
+			// 움직임 속도 조절
+			GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+			// 조작 허용
+			EnableInput(SHPlayerController);
+		}
+		// AI라면
+		else
+		{
+			// NPC 모드로 설정
+			SetControlMode(EControlMode::NPC);
+			// 움직임 속도 조절
+			GetCharacterMovement()->MaxWalkSpeed = 400.0f;
+			// 비헤이비어트리 구동
+			SHAIController->RunAI();
+		}
+
+		break;
+	}
+	case ESH_CharacterState::DEAD:
+	{
+		// 해당 캐릭터의 충돌처리를 끔
+		SetActorEnableCollision(false);
+		// 혹시 메시가 꺼져있다면 킴
+		GetMesh()->SetHiddenInGame(false);
+		// HP UI 숨김
+		HPBarWidget->SetHiddenInGame(true);
+		// 죽은 애니메이션 작동
+		SHAnim->SetDeadAnim();
+		// 데미지 프레임워크 끔
+		SetCanBeDamaged(false);
+
+		// 플레이어라면
+		if (bIsPlayer)
+		{
+			// 조작 막음
+			DisableInput(SHPlayerController);
+		}
+		// AI라면
+		else
+		{
+			// 비헤이비어 트리 정지
+			SHAIController->StopAI();
+		}
+
+		// 타이머 설정. DeadTimer 이후에 람다함수 실행됨.
+		GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda([this]()->void {
+		
+			// 플레이어라면
+			if (bIsPlayer)
+			{
+				// 레벨을 아예 다시 시작해라
+				SHPlayerController->RestartLevel();
+			}
+			// AI라면
+			else
+			{
+				// 오브젝트 파괴
+				Destroy();
+			}
+		
+		}), DeadTimer, false);
+
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+ESH_CharacterState ASH_Character::GetCharacterState() const
+{
+	return CurrentState;
 }
 
 // Setting View
@@ -364,6 +530,12 @@ void ASH_Character::PostInitializeComponents()
 
 }
 
+// 경험치 획득량 반환
+int32 ASH_Character::GetExp() const
+{
+	return CharacterStat->GetDropExp();
+}
+
 float ASH_Character::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
 {
 	// 최종적으로 넘어오는 데미지값.
@@ -372,10 +544,24 @@ float ASH_Character::TakeDamage(float DamageAmount, FDamageEvent const & DamageE
 
 	// 최종 데미지를 스탯에서 연산해줌.
 	CharacterStat->SetDamage(FinalDamage);
+
+	// 현재 상태가 죽음이라면
+	if (CurrentState == ESH_CharacterState::DEAD)
+	{
+		// 대상자가 플레이어라면
+		if (EventInstigator->IsPlayerController())
+		{
+			// 플레이어의 컨트롤러를 가져옴.
+			auto Instigator_PlayerController = Cast<ASH_PlayerController>(EventInstigator);
+			SH_CHECK(Instigator_PlayerController != nullptr, 0.0f);
+			// NPC 죽음을 처리. 경험치 연산.
+			Instigator_PlayerController->NPCKill(this);
+		}
+	}
 	return FinalDamage;
 }
 
-// 빙의 됐을때 호출
+// 빙의 됐을때 호출. 컨트롤러와 폰이 연결됐을때.
 void ASH_Character::PossessedBy(AController * NewController)
 {
 	Super::PossessedBy(NewController);
@@ -405,7 +591,7 @@ bool ASH_Character::CanSetWeapon()
 	return (CurrentWeapon == nullptr);
 }
 
-void ASH_Character::SetWeapon(ASHWeapon * NewWeapon)
+void ASH_Character::SetWeapon(ASH_Weapon* NewWeapon)
 {
 	// 애셋정보가 잘 들어왔고, 현재 무기가 없으면 통과
 	SH_CHECK(NewWeapon != nullptr && CurrentWeapon == nullptr);
@@ -671,18 +857,17 @@ void ASH_Character::AttackCheck()
 }
 
 
-// BeginPlay에서 등록된 델리게이트 함수
+// BeginPlay에서 등록된 델리게이트 함수. 로딩한 메시 애셋을 등록하는 함수
 void ASH_Character::OnAssetLoadCompleted()
 {
 	USkeletalMesh* AssetLoaded = Cast<USkeletalMesh>(AssetStreamingHandle->GetLoadedAsset());
 
 	// 포인터 리셋 시킴. Shared 포인터는 한번 사용했으면 이제 초기화 해줘야함.
 	AssetStreamingHandle.Reset();
-	// 제대로 애셋 정보를 가져왔다면
-	if (AssetLoaded != nullptr)
-	{
-		// 메시에 등록함. 원래 생성자에
-		GetMesh()->SetSkeletalMesh(AssetLoaded);
-	}
-
+	// 만약 애셋 정보를 가져왔으면 통과.
+	SH_CHECK(AssetLoaded != nullptr);
+	// 메시에 등록함. 원래 생성자에
+	GetMesh()->SetSkeletalMesh(AssetLoaded);
+	// 폰의 STATE를 READY 상태로 바꿈.
+	SetCharacterState(ESH_CharacterState::READY);
 }

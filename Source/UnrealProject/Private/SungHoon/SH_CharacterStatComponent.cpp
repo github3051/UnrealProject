@@ -87,7 +87,7 @@ void USH_CharacterStatComponent::SetHP(float NewHP)
 	}
 }
 
-float USH_CharacterStatComponent::GetHPRatio()
+float USH_CharacterStatComponent::GetHPRatio() const
 {
 	// CurrentStatData가 정상적으로 있다면 통과
 	SH_CHECK(CurrentStatData != nullptr, 0.0f);
@@ -96,7 +96,7 @@ float USH_CharacterStatComponent::GetHPRatio()
 }
 
 // 해당 레벨의 player의 공격력을 가져옴
-float USH_CharacterStatComponent::GetAttack()
+float USH_CharacterStatComponent::GetAttack() const
 {
 	// CurrentStatData를 잘 가지고 있으면 통과.
 	// 최초 1레벨때 초기화되면서 가지게 됨. InitializeComponent에서
@@ -104,12 +104,9 @@ float USH_CharacterStatComponent::GetAttack()
 	return CurrentStatData->Attack;
 }
 
-
-// Called every frame
-//void USH_CharacterStatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-//{
-//	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-//
-//	// ...
-//}
-
+// 몬스터 경험치 반환
+int32 USH_CharacterStatComponent::GetDropExp() const
+{
+	// 경험치 반환
+	return CurrentStatData->DropExp;
+}

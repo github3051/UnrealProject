@@ -10,7 +10,6 @@
 // 공격이 끝나는지를 알려주는 멀티캐스트 델리게이트 선언
 DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
 
-
 UENUM()
 enum class EControlMode
 {
@@ -27,6 +26,12 @@ class UNREALPROJECT_API ASH_Character : public ACharacter
 public:
 	// Sets default values for this character's properties
 	ASH_Character();
+
+	void SetCharacterState(ESH_CharacterState NewState);
+	ESH_CharacterState GetCharacterState() const;
+
+	// 경험치 획득량 반환 함수
+	int32 GetExp() const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -93,10 +98,10 @@ public:
 	// 무기를 들 수 있는지
 	bool CanSetWeapon();
 	// 무기 장착함수
-	void SetWeapon(class ASHWeapon* NewWeapon);
+	void SetWeapon(class ASH_Weapon* NewWeapon);
 	// 무기 관련 클래스 변수
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
-	class ASHWeapon* CurrentWeapon;
+	class ASH_Weapon* CurrentWeapon;
 
 	// 전방선언 및 클래스 포인터 변수 (헤더 추가 안해도됨. 있다고만 알림)
 	UPROPERTY(VisibleAnywhere, Category = Stat)
@@ -181,4 +186,26 @@ private:
 	// FStreamableHandle 구조체 shared ptr로 전방선언.
 	TSharedPtr<struct FStreamableHandle> AssetStreamingHandle;
 
+
+	// 사용중인 애셋 인덱스
+	int32 AssetIndex = 0;
+	// 현재 상태
+	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category = State, Meta = (AllowPrivateAccess = true))
+	ESH_CharacterState CurrentState;
+	// 플레이어냐
+	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category = State, Meta = (AllowPrivateAccess = true))
+	bool bIsPlayer;
+	// AI 컨트롤러
+	UPROPERTY()
+	class ASH_AIController* SHAIController;
+	// 플레이어 컨트롤러
+	UPROPERTY()
+	class ASH_PlayerController* SHPlayerController;
+
+
+	// 죽음 상태 지연 시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, Meta = (AllowPrivateAccess = true))
+	float DeadTimer;
+	// 죽음 관련 타이머 핸들
+	FTimerHandle DeadTimerHandle = {};
 };

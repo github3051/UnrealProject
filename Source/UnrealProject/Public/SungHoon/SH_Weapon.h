@@ -5,24 +5,23 @@
 //#include "CoreMinimal.h"
 #include "../../UnrealProject.h" // for EngineMinimal.h
 #include "GameFramework/Actor.h"
-#include "SHWeapon.generated.h"
+#include "SH_Weapon.generated.h"
 
 UCLASS()
-class UNREALPROJECT_API ASHWeapon : public AActor
+class UNREALPROJECT_API ASH_Weapon : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ASHWeapon();
+	ASH_Weapon();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+private:
+
 
 public:
 	UPROPERTY(VisibleAnywhere, Category = Weapon)

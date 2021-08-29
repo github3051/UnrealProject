@@ -22,10 +22,6 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 public:
 	// 박스 컴포턴트
 	UPROPERTY(VisibleAnywhere, Category = Box)
@@ -41,7 +37,7 @@ public:
 
 	// SHWeapon 클래스와 그걸 상속받는 클래스들의 목록으로 한정지음.
 	UPROPERTY(EditInstanceOnly, Category = Box)
-	TSubclassOf<class ASHWeapon> WeaponItemClass; // 전방선언
+	TSubclassOf<class ASH_Weapon> WeaponItemClass; // 전방선언
 
 private:
 	UFUNCTION()

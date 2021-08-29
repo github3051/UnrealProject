@@ -52,6 +52,10 @@ private:
 	// NPC 생성함수
 	void OnNPCSpawn();
 
+	// NPC가 파괴되었을때 호출할 함수
+	UFUNCTION()
+	void OnKeyNPCDestroyed(AActor* DestoryedActor);
+
 private:
 	// for SM_SQUARE
 	UPROPERTY(VisibleAnywhere, Category = Mesh, Meta = (AllowPrivateAccess = true))

@@ -25,6 +25,11 @@ public:
 	static const FName PatrolPosKey;
 	static const FName TargetKey;
 
+	// 비헤이비어 트리 실행
+	void RunAI();
+	// 비헤이비어 트리 중단
+	void StopAI();
+
 private:
 	// 블랙보드
 	UPROPERTY()

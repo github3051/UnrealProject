@@ -35,9 +35,11 @@ public:
 	// HP 설정
 	void SetHP(float NewHP);
 	// 현재 HP % 비율
-	float GetHPRatio();
+	float GetHPRatio() const;
 	// 해당 레벨의 player의 공격력을 가져옴
-	float GetAttack();
+	float GetAttack() const;
+	// 몬스터 경험치 반환함수
+	int32 GetDropExp() const;
 
 	// 델리게이트 변수
 	FOnHPIsZeroDelegate OnHPIsZero;
@@ -52,9 +54,5 @@ private:
 	// Transient는 직렬화를 제외시키는 키워드
 	UPROPERTY(Transient, VisibleInstanceOnly, Category = Stat, Meta = (AllowPrivateAccess = true))
 	float CurrentHP;
-
-//public:	
-//	// Called every frame
-//	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 		
 };
