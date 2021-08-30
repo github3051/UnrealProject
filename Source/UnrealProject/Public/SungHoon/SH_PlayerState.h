@@ -7,7 +7,7 @@
 #include "GameFramework/PlayerState.h"
 #include "SH_PlayerState.generated.h"
 
-
+// 델리게이트 선언
 DECLARE_MULTICAST_DELEGATE(FOnPlayerStateChangedDelegate);
 
 
@@ -26,15 +26,22 @@ public:
 	int32 GetGameScore() const;
 	int32 GetCharacterLevel() const;
 
+	// for Game Save
+	int32 GetGameHighScore() const;
+	FString SaveSlotName;
+
 	// exp 관련
 	float GetExpRatio() const; // 현재 경험치 비율 반환
 	bool AddExp(int32 IncomeExp);
 
-	// Score
-	void AddScore();
+	// for GameScore
+	void AddGameScore();
 
 	// 플레이어 데이터 초기화 함수
 	void InitPlayerData();
+
+	// 저장
+	void SavePlayerData();
 
 	// 델리게이트 변수 선언
 	FOnPlayerStateChangedDelegate OnPlayerStateChanged;
@@ -42,6 +49,9 @@ public:
 protected:
 	UPROPERTY(Transient)
 	int32 GameScore;
+
+	UPROPERTY(Transient)
+	int32 GameHighScore;
 
 	UPROPERTY(Transient)
 	int32 CharacterLevel;

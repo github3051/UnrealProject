@@ -24,6 +24,8 @@ public:
 	// 컨트롤러 정보를 가져와서 스코어 함수 호출
 	void AddScore(class ASH_PlayerController* ScoredPlayer);
 
+	// 현재 게임 스테이트에서 토탈 게임 스코어를 가져옴
+	int32 GetScore() const;
 
 private:
 	// 게임 스테이트 변수

@@ -13,12 +13,13 @@ USH_BTDecorator_IsInAttackRange::USH_BTDecorator_IsInAttackRange()
 	NodeName = TEXT("CanAttack");
 }
 
+// 원하는 조건이 달성됐는지 파악하는 함수.
 bool USH_BTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeComponent & OwnerComp, uint8 * NodeMemory) const
 {
 	bool bResult = Super::CalculateRawConditionValue(OwnerComp, NodeMemory);
 
-	// AI 폰을 찾음
-	auto ControllingPawn = OwnerComp.GetAIOwner()->GetPawn();
+	// AI 폰을 찾아서 Character 클래스로 캐스팅.
+	auto ControllingPawn = Cast<ASH_Character>(OwnerComp.GetAIOwner()->GetPawn());
 	// 소유하는 폰을 못찾으면 false
 	if (ControllingPawn == nullptr)
 	{
@@ -33,8 +34,8 @@ bool USH_BTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeCo
 		return false;
 	}
 
-	// 타깃과 현재 AI의 최단거리가 200cm 이하라면 true
-	bResult = (Target->GetDistanceTo(ControllingPawn) <= 200.0f);
+	// 타깃과 현재 AI의 거리가 공격 범위 안에 있다면 true
+	bResult = (Target->GetDistanceTo(ControllingPawn) <= ControllingPawn->GetFinalAttackRange());
 
 	return bResult;
 }

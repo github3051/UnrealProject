@@ -13,6 +13,8 @@
 #include "SungHoon/SH_PlayerController.h"
 #include "SungHoon/SH_PlayerState.h"
 #include "SungHoon/SH_HUDWidget.h"
+#include "SungHoon/SH_GameModeBase.h"
+
 
 /*---------------------------------
 		UnrealProjectSetting
@@ -85,12 +87,12 @@ ASH_Character::ASH_Character()
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("SH_Character"));
 
 	// for Debug Drawing by Capsule
-	AttackRange = 200.0f;
+	AttackRange = 80.0f; // 공격 범위
 	AttackRadius = 50.0f; // 반지름
 
 	// CharacterStat 컴포넌트 생성.
 	CharacterStat = CreateDefaultSubobject<USH_CharacterStatComponent>(TEXT("SH_CHARACTERSTAT"));
-	
+
 	/*--------------------------------
 					UI
 	---------------------------------*/
@@ -130,7 +132,7 @@ ASH_Character::ASH_Character()
 	HPBarWidget->SetHiddenInGame(true);
 	// 데미지 프레임워크 끔
 	SetCanBeDamaged(false);
-	
+
 	// 죽음 지연 시간 5초
 	DeadTimer = 5.0f;
 }
@@ -139,7 +141,7 @@ ASH_Character::ASH_Character()
 void ASH_Character::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	/*
 		언리얼 4.21 이후로는 위젯의 초기화 시점이 PostInitializeComponents에서 BeginPlay로 변경됨.
 		올바르게 동작하려면 위젯들은 BeginPlay에 추가하도록 하자.
@@ -156,7 +158,7 @@ void ASH_Character::BeginPlay()
 
 	// 플레이어 컨트롤러 값을 가져옴
 	bIsPlayer = IsPlayerControlled();
-	
+
 
 	// 플레이어라면
 	if (bIsPlayer)
@@ -174,7 +176,7 @@ void ASH_Character::BeginPlay()
 		// 컨트롤러 값을 제대로 캐스팅해서 가져왔다면 통과
 		SH_CHECK(SHAIController != nullptr);
 	}
-	
+
 	// USH_CharacterSetting에 대한 CDO 읽어옴
 	auto DefaultSetting = GetDefault<USH_CharacterSetting>();
 
@@ -236,6 +238,20 @@ void ASH_Character::SetCharacterState(ESH_CharacterState NewState)
 			SH_CHECK(SHPlayerState != nullptr);
 			// 플레이어의 레벨을 새롭게 레벨 설정.
 			CharacterStat->SetNewLevel(SHPlayerState->GetCharacterLevel());
+		}
+		// AI라면
+		else
+		{
+			// 게임 모드를 가져옴. 게임 실행중일때 게임 모드를 가져오는 함수.
+			auto SHGameMode = Cast<ASH_GameModeBase>(GetWorld()->GetAuthGameMode());
+			SH_CHECK(SHGameMode != nullptr);
+			// 게임 모드에서 Score값을 가져와 0.8을 곱한 값을 AI 레벨로 설정
+			int32 TargetLevel = FMath::CeilToInt(((float)SHGameMode->GetScore()* 0.8f));
+			// TargetLevle을 1~20 사이의 정수로 확정지음. 
+			int32 FinalLevel = FMath::Clamp<int32>(TargetLevel, 1, 20);
+			SH_LOG(Warning, TEXT("New NPC Level : %d"), FinalLevel);
+			// 캐릭터 스텟으로가 해당 레벨로 레벨 설정해줌.
+			CharacterStat->SetNewLevel(FinalLevel);
 		}
 
 		// 엑터를 숨김
@@ -319,7 +335,7 @@ void ASH_Character::SetCharacterState(ESH_CharacterState NewState)
 
 		// 타이머 설정. DeadTimer 이후에 람다함수 실행됨.
 		GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda([this]()->void {
-		
+
 			// 플레이어라면
 			if (bIsPlayer)
 			{
@@ -332,7 +348,7 @@ void ASH_Character::SetCharacterState(ESH_CharacterState NewState)
 				// 오브젝트 파괴
 				Destroy();
 			}
-		
+
 		}), DeadTimer, false);
 
 		break;
@@ -536,6 +552,26 @@ int32 ASH_Character::GetExp() const
 	return CharacterStat->GetDropExp();
 }
 
+// 최종 공격 범위 함수
+float ASH_Character::GetFinalAttackRange() const
+{
+	// 무기가 있으면 무기 공격 범위, 아니면 기본 캐릭터 공격 범위를 설정.
+	return (CurrentWeapon != nullptr) ? CurrentWeapon->GetAttackRange() : AttackRange;
+}
+
+// 최종 공격 데미지 값 계산 함수
+float ASH_Character::GetFinalAttackDamage() const
+{
+	// 무기가 있을때와 없을때를 나눠서 계산함.
+	float AttackDamage = (CurrentWeapon != nullptr) ?
+		(CharacterStat->GetAttack() + CurrentWeapon->GetAttackDamage()) : CharacterStat->GetAttack();
+	// 무기가 있을때와 없을때
+	float AttackModifer = (CurrentWeapon != nullptr) ? CurrentWeapon->GetAttackModifier() : 1.0f;
+
+	// 실제 공격력은 무기 공격력 * 추가 데미지 연산값
+	return AttackDamage * AttackModifer;
+}
+
 float ASH_Character::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
 {
 	// 최종적으로 넘어오는 데미지값.
@@ -588,13 +624,25 @@ void ASH_Character::PossessedBy(AController * NewController)
 bool ASH_Character::CanSetWeapon()
 {
 	// 무기가 없다면 true
-	return (CurrentWeapon == nullptr);
+	//return (CurrentWeapon == nullptr);
+
+	// 항상 교체할 수 있게 수정한다. chapter 14
+	return true;
 }
 
 void ASH_Character::SetWeapon(ASH_Weapon* NewWeapon)
 {
-	// 애셋정보가 잘 들어왔고, 현재 무기가 없으면 통과
-	SH_CHECK(NewWeapon != nullptr && CurrentWeapon == nullptr);
+	// 무기 애셋정보가 잘 들어왔으면 통과
+	SH_CHECK(NewWeapon != nullptr);
+
+	// 무기가 이미 있다면 해제하고 파괴함.
+	if (CurrentWeapon != nullptr)
+	{
+		// 액터와 연결된 부분을 해제함. Attachment 함수로 붙은거
+		CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		CurrentWeapon->Destroy(); // 무기를 파괴함.
+		CurrentWeapon = nullptr; // 포인터값 초기화 했음.
+	}
 
 	// 실제 스켈레탈 메시의 소켓명과 정확히 일치해야함.
 	FName WeaponSocket(TEXT("hand_rSocket")); // string 변수
@@ -801,6 +849,10 @@ void ASH_Character::AttackEndComboState()
 
 void ASH_Character::AttackCheck()
 {
+	// 공격 범위를 가져옴
+	float FinalAttackRange = GetFinalAttackRange();
+
+
 	// 충돌처리 결과를 받을 구조체 변수 선언
 	FHitResult HitResult;
 
@@ -811,7 +863,7 @@ void ASH_Character::AttackCheck()
 	bool bResult = GetWorld()->SweepSingleByChannel(
 		HitResult,
 		GetActorLocation(),
-		GetActorLocation() + GetActorForwardVector() * AttackRange,
+		GetActorLocation() + GetActorForwardVector() * FinalAttackRange,
 		FQuat::Identity,
 		ECollisionChannel::ECC_GameTraceChannel2,
 		FCollisionShape::MakeSphere(AttackRadius), //구체
@@ -819,12 +871,12 @@ void ASH_Character::AttackCheck()
 	);
 
 #if ENABLE_DRAW_DEBUG
-	
-	FVector TraceVec = GetActorForwardVector() * AttackRange;
+
+	FVector TraceVec = GetActorForwardVector() * FinalAttackRange;
 	// 캡슐의 중앙값
 	FVector Center = GetActorLocation() + TraceVec * 0.5f; // 절반
 	// 캡슐의 실제 높이
-	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	float HalfHeight = FinalAttackRange * 0.5f + AttackRadius;
 	// 캡슐의 Z축의 방향 설정. 쿼터니언으로 바꿈
 	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
 	// 충돌이 있으면 초록, 없으면 빨강
@@ -851,11 +903,10 @@ void ASH_Character::AttackCheck()
 			SH_LOG(Error, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
 
 			FDamageEvent DamageEvent;
-			HitResult.Actor->TakeDamage(50.0f, DamageEvent, GetController(), this);
+			HitResult.Actor->TakeDamage(GetFinalAttackDamage(), DamageEvent, GetController(), this);
 		}
 	}
 }
-
 
 // BeginPlay에서 등록된 델리게이트 함수. 로딩한 메시 애셋을 등록하는 함수
 void ASH_Character::OnAssetLoadCompleted()

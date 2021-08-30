@@ -73,4 +73,7 @@ void USH_HUDWidget::UpdatePlayerState()
 	PlayerLevel->SetText(FText::FromString(FString::FromInt(CurrentPlayerState->GetCharacterLevel())));
 	// PlayerState에서 GameScore 가져와 등록
 	CurrentScore->SetText(FText::FromString(FString::FromInt(CurrentPlayerState->GetGameScore())));
+	// HigtScore에 저장
+	HighScore->SetText(FText::FromString(FString::FromInt(CurrentPlayerState->GetGameHighScore())));
+
 }

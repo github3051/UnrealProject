@@ -64,3 +64,9 @@ void ASH_GameModeBase::AddScore(ASH_PlayerController * ScoredPlayer)
 	// 게임 스테이트에도 점수를 추가
 	SHGameState->AddGameScore();
 }
+
+// 현재 게임 스테이트에서 토탈 게임 스코어를 가져옴
+int32 ASH_GameModeBase::GetScore() const
+{
+	return SHGameState->GetTotalGameScore();
+}

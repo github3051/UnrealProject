@@ -33,6 +33,11 @@ public:
 	// 경험치 획득량 반환 함수
 	int32 GetExp() const;
 
+	// 최종 공격 범위 함수.
+	float GetFinalAttackRange() const;
+	// 최종 데미지
+	float GetFinalAttackDamage() const;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -74,6 +79,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	//
 	virtual void PostInitializeComponents() override;
 	
 	// AActor 부모 클래스의 함수를 오버라이딩함.

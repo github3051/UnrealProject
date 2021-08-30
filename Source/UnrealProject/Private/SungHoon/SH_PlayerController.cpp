@@ -48,7 +48,7 @@ void ASH_PlayerController::NPCKill(ASH_Character * KilledNPC) const
 
 void ASH_PlayerController::AddGameScore() const
 {
-	SHPlayerState->AddScore();
+	SHPlayerState->AddGameScore();
 }
 
 
