@@ -4,8 +4,7 @@
 - gitignore : Unreal
 
 # Features
-- 매주 저녁
-- 비대면 음성채팅
+- xx
 
 ### Trello (private) : https://trello.com/b/xBQusI2R/unreal-adventure-rpg
 ---
@@ -13,7 +12,7 @@
 ![](/Resources/Images/August/August.png)
 
 - ### 08.08(Sun) : Create and Setting Project
-- ### 08.15(Sun) :
+- ### 08.31(Tues) : Ended Project (종료) - 약 23일 걸림.
 
 ---
 ## 9월(Semtember)
