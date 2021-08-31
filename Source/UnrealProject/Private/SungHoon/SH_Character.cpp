@@ -182,7 +182,11 @@ void ASH_Character::BeginPlay()
 
 	if (bIsPlayer)
 	{
-		AssetIndex = 3;
+		// 고정적인 스켈레탈 메시를 사용할때
+		//AssetIndex = 3;
+		auto SHPlayerState = Cast<ASH_PlayerState>(GetPlayerState());
+		SH_CHECK(SHPlayerState != nullptr);
+		AssetIndex = SHPlayerState->GetCharacterIndex();
 	}
 	else
 	{
@@ -340,7 +344,10 @@ void ASH_Character::SetCharacterState(ESH_CharacterState NewState)
 			if (bIsPlayer)
 			{
 				// 레벨을 아예 다시 시작해라
-				SHPlayerController->RestartLevel();
+				//SHPlayerController->RestartLevel();
+				
+				// 최종 결과 화면을 출력.
+				SHPlayerController->ShowResultUI();
 			}
 			// AI라면
 			else

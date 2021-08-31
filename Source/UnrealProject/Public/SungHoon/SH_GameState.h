@@ -22,10 +22,18 @@ public:
 	int32 GetTotalGameScore() const;
 	void AddGameScore();
 
+	// 게임 클리어 변수 조정
+	void SetGameCleared();
+	bool IsGameCleared() const;
+
 protected:
 
 private:
 	// 게임 스코어
 	UPROPERTY(Transient)
 	int32 TotalGameScore;
+
+	// 게임 클리어 변수
+	UPROPERTY(Transient)
+	bool bGameCleared;
 };

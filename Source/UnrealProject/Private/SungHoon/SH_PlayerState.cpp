@@ -15,6 +15,7 @@ ASH_PlayerState::ASH_PlayerState()
 	Exp = 0;
 	// 슬롯 이름
 	SaveSlotName = TEXT("Player1");
+	CharacterIndex = 0;
 }
 
 int32 ASH_PlayerState::GetGameScore() const
@@ -30,6 +31,11 @@ int32 ASH_PlayerState::GetCharacterLevel() const
 int32 ASH_PlayerState::GetGameHighScore() const
 {
 	return int32();
+}
+
+int32 ASH_PlayerState::GetCharacterIndex() const
+{
+	return CharacterIndex;
 }
 
 void ASH_PlayerState::InitPlayerData()
@@ -50,6 +56,8 @@ void ASH_PlayerState::InitPlayerData()
 	GameScore = 0;
 	GameHighScore = SHSaveGame->HighScore;
 	Exp = SHSaveGame->Exp;
+	// 플레이어의 스켈레탈 메시 정보 인덱스값을 세이브 파일로부터 가져옴
+	CharacterIndex = SHSaveGame->CharacterIndex;
 
 	SavePlayerData();
 }
@@ -63,6 +71,8 @@ void ASH_PlayerState::SavePlayerData()
 	NewPlayerData->Level = CharacterLevel;
 	NewPlayerData->Exp = Exp;
 	NewPlayerData->HighScore = GameHighScore;
+	// 캐릭터 메시 인덱스 번호 저장
+	NewPlayerData->CharacterIndex = CharacterIndex; 
 
 	// 게임 슬롯에 해당하는 데이터가 이미 있으면 에러. 덮어쓰기.
 	if (!UGameplayStatics::SaveGameToSlot(NewPlayerData, SaveSlotName, 0))

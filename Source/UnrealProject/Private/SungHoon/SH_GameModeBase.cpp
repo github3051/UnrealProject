@@ -19,6 +19,9 @@ ASH_GameModeBase::ASH_GameModeBase()
 	PlayerStateClass = ASH_PlayerState::StaticClass();
 	// GameState 설정
 	GameStateClass = ASH_GameState::StaticClass();
+
+	// 게임 클리어 목표 스코어 2로 지정.
+	ScoreToClear = 2;
 }
 
 void ASH_GameModeBase::PostInitializeComponents()
@@ -63,6 +66,34 @@ void ASH_GameModeBase::AddScore(ASH_PlayerController * ScoredPlayer)
 
 	// 게임 스테이트에도 점수를 추가
 	SHGameState->AddGameScore();
+
+	// 현재 스코어가 전체 게임 목표 클리어 스코어보다 크면
+	if (GetScore() >= ScoreToClear)
+	{
+		// 클리어 변수를 true로 바꿔줌.
+		SHGameState->SetGameCleared();
+
+		// 월드상에 존재하는 모든 폰에 접근
+		for (FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; ++It)
+		{
+			// 전부 끔. 소리, 물리 등등 동작 중단.
+			(*It)->TurnOff();
+		}
+
+		// 월드상의 모든 캐릭터 컨트롤러에 접근 -> 멀티플레이어 아니면, 싱글은 1명뿐임.
+		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			// 캐스팅함.
+			const auto SHPlayerController = Cast<ASH_PlayerController>(It->Get());
+
+			if (SHPlayerController != nullptr)
+			{
+				// 모든 플레이어 컨트롤러에게 결과 화면을 보여줌.
+				SHPlayerController->ShowResultUI();
+			}
+		}
+	}
+
 }
 
 // 현재 게임 스테이트에서 토탈 게임 스코어를 가져옴

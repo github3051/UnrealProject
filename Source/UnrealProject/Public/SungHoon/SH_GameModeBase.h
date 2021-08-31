@@ -32,4 +32,7 @@ private:
 	UPROPERTY()
 	class ASH_GameState* SHGameState;
 
+	// 게임 목표 클리어 스코어 변수
+	UPROPERTY()
+	int32 ScoreToClear;
 };

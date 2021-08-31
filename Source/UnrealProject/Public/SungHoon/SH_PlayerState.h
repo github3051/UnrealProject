@@ -25,6 +25,7 @@ public:
 
 	int32 GetGameScore() const;
 	int32 GetCharacterLevel() const;
+	int32 GetCharacterIndex() const;
 
 	// for Game Save
 	int32 GetGameHighScore() const;
@@ -59,6 +60,9 @@ protected:
 	// 경험치 변수
 	UPROPERTY(Transient)
 	int32 Exp;
+
+	UPROPERTY(Transient)
+	int32 CharacterIndex;
 
 private:
 	// 레벨 설정
