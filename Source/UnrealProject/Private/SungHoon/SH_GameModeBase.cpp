@@ -7,6 +7,7 @@
 #include "SungHoon/SH_Character.h" // SH_Character.h
 #include "SungHoon/SH_PlayerState.h"
 #include "SungHoon/SH_GameState.h"
+#include "EngineUtils.h" // for TActorIterator<APawn>
 
 ASH_GameModeBase::ASH_GameModeBase()
 {
@@ -74,8 +75,11 @@ void ASH_GameModeBase::AddScore(ASH_PlayerController * ScoredPlayer)
 		SHGameState->SetGameCleared();
 
 		// 월드상에 존재하는 모든 폰에 접근
-		for (FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; ++It)
+		// cf. http://egloos.zum.com/sweeper/v/3208624
+		// for(FConstPawnIterator it = GetWorld()->GetPawnIterator(); It; ++it);
+		for (TActorIterator<APawn> It(GetWorld()); It; ++It)
 		{
+			SH_LOG(Warning, TEXT("Found Actor name : %s"), *(*It)->GetName());
 			// 전부 끔. 소리, 물리 등등 동작 중단.
 			(*It)->TurnOff();
 		}
