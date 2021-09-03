@@ -9,10 +9,13 @@
 #include "SungHoon/SH_GameState.h"
 #include "EngineUtils.h" // for TActorIterator<APawn>
 
+#include "SungHoon/TestCharacter.h"
+
 ASH_GameModeBase::ASH_GameModeBase()
 {
 	// Pawn 설정
-	DefaultPawnClass = ASH_Character::StaticClass();
+	//DefaultPawnClass = ASH_Character::StaticClass();
+	DefaultPawnClass = ATestCharacter::StaticClass();
 	// PlayerController에 대한 클래스 정보도 게임모드로 넘겨주자.
 	PlayerControllerClass = ASH_PlayerController::StaticClass();
 

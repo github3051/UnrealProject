@@ -507,11 +507,12 @@ void ASH_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction(TEXT("SH_Attack"), EInputEvent::IE_Pressed, this, &ASH_Character::Attack);
 }
 
+// 각종 컴포넌트가 모두 초기화된 이후에 호출되는 함수.
 void ASH_Character::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	// 델리게이트 사용을 위해 애님인스턴스를 임시로 가져온다.
+	// 애님 인스턴스를 가져온다.
 	SHAnim = Cast<USH_AnimInstance>(GetMesh()->GetAnimInstance());
 
 	// 거짓이면 매크로 출력
@@ -809,6 +810,7 @@ void ASH_Character::Attack()
 			IsComboInputOn = true;
 		}
 	}
+	// 최초의 공격 애니메이션을 실행. 콤보 공격 시작.
 	else
 	{
 		// CurrentCombo가 제대로 초기화 됐는지 체크
