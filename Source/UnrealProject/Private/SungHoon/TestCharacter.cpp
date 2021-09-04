@@ -128,7 +128,7 @@ void ATestCharacter::PostInitializeComponents()
 	// 종료되면 알아서 공격 판별 변수를 false로 바꿔줌
 	Anim->OnMontageEnded.AddDynamic(this, &ATestCharacter::OnTestAttackMontageEnded);
 
-	// 노티파이들 델리게이트 바인딩
+	// 노티파이 함수 실행으로 인해 콤보 공격을 허용하는 델리게이트.
 	Anim->OnTestAttackHitCheck.AddLambda([this]()->void {
 	
 		// 콤보 허용
@@ -139,7 +139,7 @@ void ATestCharacter::PostInitializeComponents()
 		}
 	});
 
-	// 노티파이들 델리게이트 바인딩
+	// 다음 콤보공격 판별 델리게이트
 	Anim->OnTestNextAttackCheck.AddLambda([this]()->void {
 
 		// 다음 콤보 공격을 실행할지.
@@ -198,10 +198,9 @@ void ATestCharacter::TestAttack()
 	// 공격중이지 않으면
 	else
 	{
-		
 		// 몽타주 첫 재생
 		Anim->PlayTestAttackMontage();
-
+		// 콤보 변수 수정
 		CurrentCombo++;
 		bCanCombo = false;
 		bNextComboInput = false;
@@ -216,6 +215,7 @@ void ATestCharacter::TestAttack()
 void ATestCharacter::OnTestAttackMontageEnded(UAnimMontage * Montage, bool bInterrupted)
 {
 	SH_LOG_S(Warning);
+	
 	// 공격 판별 변수 초기화
 	bIsAttacking = false;
 
@@ -224,5 +224,5 @@ void ATestCharacter::OnTestAttackMontageEnded(UAnimMontage * Montage, bool bInte
 	bNextComboInput = false;
 	bCanCombo = false;
 
-	Anim->SetCurrentSection();
+	Anim->InitializeSection();
 }

@@ -12,8 +12,8 @@
 DECLARE_MULTICAST_DELEGATE(FOnAttackHitCheckDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnNextAttackCheckDelegate);
 
-// test
-DECLARE_MULTICAST_DELEGATE(FOnTestAttackHitCheckDelegate);
+// 사용자 정의 멀티캐스트 델리게이트 매크로 자료형 선언
+DECLARE_MULTICAST_DELEGATE(FOnAccessComboInputDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnTestNextAttackCheckDelegate);
 
 
@@ -34,19 +34,20 @@ public:
 	// test
 	void PlayTestAttackMontage();
 	void JumpToTestAttackMontageSection(int32 NewSection);
-	void SetCurrentSection();
+	void InitializeSection(); // 섹션 초기화
 
 	// 다음 몽타주 섹션으로 넘어가기 위한 함수
 	void JumpToAttackMontageSection(int32 NewSection);
 
 public:
+	// test
+	FOnAccessComboInputDelegate OnTestAttackHitCheck;
+	FOnTestNextAttackCheckDelegate OnTestNextAttackCheck;
+	
 	// 델리게이트 변수 선언.
 	FOnAttackHitCheckDelegate OnAttackHitCheck;
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 
-	// test
-	FOnTestAttackHitCheckDelegate OnTestAttackHitCheck;
-	FOnTestNextAttackCheckDelegate OnTestNextAttackCheck;
 
 	// 죽는 애니메이션 설정
 	void SetDeadAnim() { IsDead = true; }
@@ -67,10 +68,9 @@ private:
 
 	//// test
 	UFUNCTION()
-	void AnimNotify_TestAttackHitCheck();
+	void AnimNotify_AccessComboInput();
 	UFUNCTION()
 	void AnimNotify_TestNextAttackCheck();
-	FName GetTestAttackMontageSectionName(int32 Section);
 	
 
 private:

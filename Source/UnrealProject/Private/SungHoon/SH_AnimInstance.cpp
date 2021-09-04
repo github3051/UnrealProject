@@ -100,13 +100,15 @@ FName USH_AnimInstance::GetAttackMontageSectionName(int32 Section)
 // 몽타주 재생
 void USH_AnimInstance::PlayTestAttackMontage()
 {
-	FString test = TestAttackMontage->GetSectionName(CurrentSection).ToString();
-	SH_LOG(Warning, TEXT("Current Section name : %s"), *test);
+	// for Debug
+	FString currentSectionName = TestAttackMontage->GetSectionName(CurrentSection).ToString();
+	SH_LOG(Warning, TEXT("Current Section name : %s"), *currentSectionName);
+	
 	Montage_Play(TestAttackMontage, 1.0f);
 }
 
 // 공격 체크
-void USH_AnimInstance::AnimNotify_TestAttackHitCheck()
+void USH_AnimInstance::AnimNotify_AccessComboInput()
 {
 	SH_LOG_S(Warning);
 	OnTestAttackHitCheck.Broadcast();
@@ -122,19 +124,16 @@ void USH_AnimInstance::AnimNotify_TestNextAttackCheck()
 // 다음 몽타주 섹션으로 이동
 void USH_AnimInstance::JumpToTestAttackMontageSection(int32 NewSection)
 {
+	// for debug
 	CurrentSection = NewSection;
 	FName nextSection = *FString::Printf(TEXT("Attack%d"), NewSection);
 	SH_LOG(Warning, TEXT("Next Section is : %s"), *(nextSection.ToString()));
+	
 	// 다음 몽타주 섹션을 재생
 	Montage_JumpToSection(nextSection, TestAttackMontage);
 }
 
-FName USH_AnimInstance::GetTestAttackMontageSectionName(int32 Section)
-{
-	return FName();
-}
-
-void USH_AnimInstance::SetCurrentSection()
+void USH_AnimInstance::InitializeSection()
 {
 	CurrentSection = 0;
 }

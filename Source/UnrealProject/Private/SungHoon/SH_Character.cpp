@@ -521,12 +521,10 @@ void ASH_Character::PostInitializeComponents()
 	// 애님인스턴스에 있는 함수를 캐릭터 클래스에 dynamic 델리게이트 등록.
 	SHAnim->OnMontageEnded.AddDynamic(this, &ASH_Character::OnAttackMontageEnded);
 
-	// 몽타주 애니메이션에서 NextAttackCheck 노티파이가 실행되면 호출하는 델리게이트 함수(이벤트)
 	// 애님 인스턴스에서 OnAttackCheck.BroadCast를 하면 람다함수가 호출됨.
-	// Multicast 델리게이트
 	SHAnim->OnNextAttackCheck.AddLambda([this]()->void {
 
-		SH_LOG(Warning, TEXT("OnNextAttackCheck Lambda Function Called! CurrentCombo : %d"), CurrentCombo);
+		SH_LOG(Warning, TEXT("OnNextAttackCheck Lambda Called! CurrentCombo : %d"), CurrentCombo);
 
 		CanNextCombo = false;
 		// 콤보공격이 적절한 타이밍에 들어왔다면
@@ -538,7 +536,6 @@ void ASH_Character::PostInitializeComponents()
 	});
 
 	// 공격을 위한 델리게이트 등록. 몽타주 애니메이션의 AttackHitCheck 노티파이 실행시 자동 호출
-	// Muticast 델리게이트
 	SHAnim->OnAttackHitCheck.AddUObject(this, &ASH_Character::AttackCheck);
 
 	// 죽는것에 대한 이벤트를 등록하기 위한 델리게이트 등록!
@@ -550,8 +547,6 @@ void ASH_Character::PostInitializeComponents()
 		// 충돌처리 꺼줌
 		SetActorEnableCollision(false);
 	});
-
-
 }
 
 // 경험치 획득량 반환
