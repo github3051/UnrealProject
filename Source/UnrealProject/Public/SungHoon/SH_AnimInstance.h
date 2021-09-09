@@ -12,6 +12,10 @@
 DECLARE_MULTICAST_DELEGATE(FOnAttackHitCheckDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnNextAttackCheckDelegate);
 
+// 사용자 정의 멀티캐스트 델리게이트 매크로 자료형 선언
+DECLARE_MULTICAST_DELEGATE(FOnAccessComboInputDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnTestNextAttackCheckDelegate);
+
 
 
 UCLASS()
@@ -27,36 +31,67 @@ public:
 	// for Montage
 	void PlayAttackMontage();
 
+	// test
+	void PlayTestAttackMontage();
+	void JumpToTestAttackMontageSection(int32 NewSection);
+	void InitializeSection(); // 섹션 초기화
+
 	// 다음 몽타주 섹션으로 넘어가기 위한 함수
 	void JumpToAttackMontageSection(int32 NewSection);
 
 public:
+	// test
+	FOnAccessComboInputDelegate OnTestAttackHitCheck;
+	FOnTestNextAttackCheckDelegate OnTestNextAttackCheck;
+	
 	// 델리게이트 변수 선언.
 	FOnAttackHitCheckDelegate OnAttackHitCheck;
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
+
 
 	// 죽는 애니메이션 설정
 	void SetDeadAnim() { IsDead = true; }
 
 private:
-	// 노티파이 함수. _이하의 내용은 노티파이 이름과 정확히 일치해야한다.
+	/*-----------------
+		노티파이 함수.
+	_이하의 내용은 노티파이 이름과 정확히 일치해야한다.
+	------------------*/
+	// 공격에 대한 충돌 체크를 확인할 순간 타이밍
 	UFUNCTION()
 	void AnimNotify_AttackHitCheck();
-
+	// 다음 공격에 대한 처리를 하게될 판별 타이밍
 	UFUNCTION()
 	void AnimNotify_NextAttackCheck();
-
+	// 현재 진행중인 몽타주 섹션의 이름을 반환
 	FName GetAttackMontageSectionName(int32 Section);
 
+	//// test
+	UFUNCTION()
+	void AnimNotify_AccessComboInput();
+	UFUNCTION()
+	void AnimNotify_TestNextAttackCheck();
+	
+
 private:
+	// 콤보 공격을 위한 몽타주 애셋 정보
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* AttackMontage;
+
+	//// test
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* TestAttackMontage;
+
+	int32 CurrentSection = 0;
+
+	/*-----------------
+		상태 변수
+	------------------*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 	float CurrentPawnSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 	bool IsInAir;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
-	UAnimMontage* AttackMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 	bool IsDead;

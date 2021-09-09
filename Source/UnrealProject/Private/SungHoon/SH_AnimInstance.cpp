@@ -15,6 +15,17 @@ USH_AnimInstance::USH_AnimInstance()
 	{
 		AttackMontage = SH_ATTACK_MONTAGE.Object;
 	}
+
+
+	/*----------
+		test
+	------------*/
+	FString TestMontagePath = TEXT("/Game/SungHoon/Animation/SH_Montage_test.SH_Montage_test");
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> SH_TestAttack_Montage(*TestMontagePath);
+	if (SH_TestAttack_Montage.Succeeded())
+	{
+		TestAttackMontage = SH_TestAttack_Montage.Object;
+	}
 }
 
 void USH_AnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -78,4 +89,51 @@ FName USH_AnimInstance::GetAttackMontageSectionName(int32 Section)
 {
 	SH_CHECK(FMath::IsWithinInclusive<int32>(Section, 1, 4), NAME_None);
 	return FName(*FString::Printf(TEXT("Attack%d"), Section));
+}
+
+
+
+////////////////////////////////////////////////
+// test
+////////////////////////////////////////////////
+
+// 몽타주 재생
+void USH_AnimInstance::PlayTestAttackMontage()
+{
+	// for Debug
+	FString currentSectionName = TestAttackMontage->GetSectionName(CurrentSection).ToString();
+	SH_LOG(Warning, TEXT("Current Section name : %s"), *currentSectionName);
+	
+	Montage_Play(TestAttackMontage, 1.0f);
+}
+
+// 공격 체크
+void USH_AnimInstance::AnimNotify_AccessComboInput()
+{
+	SH_LOG_S(Warning);
+	OnTestAttackHitCheck.Broadcast();
+}
+
+// 콤보 체크
+void USH_AnimInstance::AnimNotify_TestNextAttackCheck()
+{
+	SH_LOG_S(Warning);
+	OnTestNextAttackCheck.Broadcast();
+}
+
+// 다음 몽타주 섹션으로 이동
+void USH_AnimInstance::JumpToTestAttackMontageSection(int32 NewSection)
+{
+	// for debug
+	CurrentSection = NewSection;
+	FName nextSection = *FString::Printf(TEXT("Attack%d"), NewSection);
+	SH_LOG(Warning, TEXT("Next Section is : %s"), *(nextSection.ToString()));
+	
+	// 다음 몽타주 섹션을 재생
+	Montage_JumpToSection(nextSection, TestAttackMontage);
+}
+
+void USH_AnimInstance::InitializeSection()
+{
+	CurrentSection = 0;
 }

@@ -79,7 +79,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	//
+	// 모든 컴포넌트들이 초기화된 이후에 호출되는 함수
 	virtual void PostInitializeComponents() override;
 	
 	// AActor 부모 클래스의 함수를 오버라이딩함.
